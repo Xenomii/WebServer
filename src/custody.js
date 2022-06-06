@@ -616,7 +616,7 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
       var filtered = caseOfficers.filter(function(value, index, arr) {return value != latestEvidence[7];});
 
       db.getCaseOfficerDetails(filtered,1).then(officerList => {
-        res.render('pages/updateOwnership',{
+        res.render('pages/investigate',{
           user_role: req.session.role,
           name: req.session.name,
           caseuuid: caseUuid,

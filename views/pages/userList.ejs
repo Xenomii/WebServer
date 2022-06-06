@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Collapsible sidebar using Bootstrap 4</title>
+    <head> <%- include('../partials/head'); %> </head>
+    <style type="text/css">
+        h3 span {
+            font-size: 22px;
+        }
+        h3 input.search-input {
+            width: 300px;
+            margin-left: auto;
+            float: right
+        }
+        .mt32 {
+            margin-top: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+            <h3>
+                <span>User List</span>
+                <input type="search" placeholder="Search..." class="form-control search-input" data-table="customers-list"/>
+            </h3>
+            <table class="table table-striped mt32 customers-list">
+                <thead>
+                    <tr>
+                        <th>Officer ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Ana Trujillo</td>
+                        <td>Ana.trujillo@gmail.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Antonio Moreno</td>
+                        <td>antoniomoreno2@gmail.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Maria Anders</td>
+                        <td>mariaanders@yahoo.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Thomas Hardy</td>
+                        <td>hardythomas.90@gmail.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Christina Berglund</td>
+                        <td>christina@outlook.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Davolio Nancy</td>
+                        <td>nancy.davolio@gmail.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Fuller Andrew</td>
+                        <td>andrew.10@yahoo.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Leverling Janet</td>
+                        <td>leverling.j@gmail.com</td>
+                        <td><button type="submit" class="btn btn-dark">Edit</button></td>
+                        <td><button type="submit" class="btn btn-dark">Remove</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="submit" class="btn btn-dark">Add User</button>
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+
+    <script>
+        (function(document) {
+            'use strict';
+
+            var TableFilter = (function(myArray) {
+                var search_input;
+
+                function _onInputSearch(e) {
+                    search_input = e.target;
+                    var tables = document.getElementsByClassName(search_input.getAttribute('data-table'));
+                    myArray.forEach.call(tables, function(table) {
+                        myArray.forEach.call(table.tBodies, function(tbody) {
+                            myArray.forEach.call(tbody.rows, function(row) {
+                                var text_content = row.textContent.toLowerCase();
+                                var search_val = search_input.value.toLowerCase();
+                                row.style.display = text_content.indexOf(search_val) > -1 ? '' : 'none';
+                            });
+                        });
+                    });
+                }
+
+                return {
+                    init: function() {
+                        var inputs = document.getElementsByClassName('search-input');
+                        myArray.forEach.call(inputs, function(input) {
+                            input.oninput = _onInputSearch;
+                        });
+                    }
+                };
+            })(Array.prototype);
+
+            document.addEventListener('readystatechange', function() {
+                if (document.readyState === 'complete') {
+                    TableFilter.init();
+                }
+            });
+
+        })(document);
+    </script>
+</body>
+
+</html>

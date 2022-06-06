@@ -1,0 +1,42 @@
+<nav id="sidebar">
+    <div class="sidebar-header">
+        <h3>Evidence Management System</h3>
+    </div>
+    
+    <ul class="list-unstyled components">
+        <p>Welcome, <i class="text_weight"><%= name%></i><br>Your Role: <a class="sb_role text_weight"></strong><%= user_role%></a></p>
+    <hr>
+    <% if(user_role == 'manager'){ %>
+        <li>
+            <a href="/dashboard">View your cases</a>
+        </li>
+
+    <% } else if (user_role == 'admin'){ %>  
+        <li>
+            <a href="/dashboard">User List</a>
+        </li>
+        <li>
+            <a href="/addUser">Add Single User</a>
+        </li>
+        <li>
+            <a href="/addUserCSV">Add Users via CSV</a>
+        </li>
+        <li>
+            <a href="/changeUserRole">Change User Role</a>
+        </li>
+
+    <% } else if (user_role == 'investigator'){ %>  
+        <li>
+            <a href="/dashboard">View your cases</a>
+        </li>
+     <% } %>
+
+    <li>
+        <a href="/changePassword">Change Password</a>
+    </li>
+    <li>
+        <a href="/logout">Logout</a>
+    </li>
+    <hr>
+    </ul>
+</nav>

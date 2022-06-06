@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Evidence Chain of Custody</title>
+    <%- include('../partials/head'); %>
+    <link rel='stylesheet' type='text/css' href='/css/evidenceList.css' />
+    <link rel='stylesheet' type='text/css' href='/css/alert.css' />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+            <h3><span>Chain of Custody</span></h3>
+            <br>
+            <h4>
+                        <span>Case ID: <%= caseuuid %></span>
+                        <br>
+                        <span>Case Name: <%= casename %></span>
+                        <br>
+                        <span>Evidence ID: <%= evidenceuuid %></span>
+            </h4>
+            
+            <table id="example" class="table table-striped mt32 customers-list" >
+                <thead>
+                    <tr>
+                        <th>Evidence Name</th>
+                        <th>Timestamp</th>
+                        <th>Event</th>
+                        <th>Ip Address</th>
+                        <th>Hash</th>
+                        <th>Description</th>
+                        <th>Owner</th>
+                        <th>Acquired</th>
+                        <th>Action By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <% for(var i=0; i < evidence.length; i++) { %>
+                            <td><%= evidence[i][1] %></td>
+                            <td><%= evidence[i][2] %></td>
+                            <td><%= evidence[i][3] %></td>
+                            <td><%= evidence[i][5] %></td>
+                            <td class="ellipsis"><%= evidence[i][4] %></td>
+                            <td class="ellipsis"><%= evidence[i][6] %></td>
+                            <td><%= evidence[i][7] %></td>
+                            <td><%= evidence[i][8] %></td>
+                            <td><%= evidence[i][9] %></td>
+                    </tr>
+                    <% } %>
+                </tbody>
+            </table>
+
+            <br><br>
+            <hr>
+            <button onClick="window.location='/viewChainOfCustody/?caseId=<%=caseid%>';" class="btn btn-dark">Display All CoC</button>
+            <br><br>
+            <form method="post" action="/evidenceList/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>#vh" enctype="multipart/form-data" autocomplete="off"> 
+                <label for="exampleFormControlInput1" class="form-label">Verify Evidence Integrity</label>
+                <input name="uploadFile" class="form-control" type="file" id="formFile"><br>
+                <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+            </form>
+
+            <% if(typeof hashresult != 'undefined') { %>
+		<a name="vh"></a>
+                <% if(hashresult.found === 1) { %>
+                  <div class="alertsuccess">
+                    <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                    <strong><%=hashresult.msg%><%-hashresult.info%></strong>
+                  </div>
+		<% } else if(hashresult.found === 2) { %>
+                  <div class="alertwarn">
+                    <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                    <strong><%=hashresult.msg%><%-hashresult.info%></strong>
+                  </div>
+                <% } else { %>
+                  <div class="alertfail">
+                    <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                    <strong><%=hashresult.msg%></strong>
+                  </div>
+                <% }%>
+            <% }%>
+
+            <div class="modal fade" id="myModal">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h4 class="modal-title">Evidence Detail</h4>
+                    </div>
+                    <div class="modal-body">
+                        <label for="exampleFormControlInput1">Evidence Name</label>
+                        <input name="evidenceName" type="name" class="form-control" id="txtName" disabled>
+                        <br>
+                        <label for="exampleFormControlInput1">Timestamp</label>
+                        <input name="evidenceName" type="name" class="form-control" id="txtTimestamp" disabled>
+                        <br>
+                        <label for="exampleFormControlInput1">Event</label>
+                        <input name="evidenceName" type="name" class="form-control" id="txtEvent" disabled>
+                        <br>
+                        <label for="exampleFormControlInput1">IP Address</label>
+                        <input name="evidenceName" type="name" class="form-control" id="txtIP" disabled>
+                        <br>
+                        <label for="exampleFormControlInput1">Hash</label>
+                        <textarea class="form-control" id="txtHash" rows="2" readonly></textarea>
+                        <br>
+                        <label for="exampleFormControlInput1">Description</label>
+                        <textarea class="form-control" id="txtDesc" rows="3" readonly></textarea>
+                        <br>
+                        <label for="exampleFormControlInput1">Owner</label>
+                        <input name="evidenceName" type="name" class="form-control" id="txtOwner" disabled>
+                        <br>
+                        <label for="exampleFormControlInput1">Acquired By</label>
+                        <input name="evidenceName" type="name" class="form-control" id="txtAcquired" disabled>
+                        <br>
+                        <label for="exampleFormControlInput1">Action By</label>
+                        <input name="evidenceName" type="name" class="form-control" id="txtActionBy" disabled>
+                        
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                  </div><!-- /.modal-content -->
+                </div><!-- /.modal-dialog -->
+              </div><!-- /.modal -->
+
+
+              
+
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('#example').DataTable();
+            } );
+        </script>
+        <script>
+            $('table tbody tr td').on('click',function(){
+            $("#myModal").modal("show");
+            $("#txtName").val($(this).closest('tr').children()[0].textContent);
+            $("#txtTimestamp").val($(this).closest('tr').children()[1].textContent);
+            $("#txtEvent").val($(this).closest('tr').children()[2].textContent);
+            $("#txtIP").val($(this).closest('tr').children()[3].textContent);
+            $("#txtHash").val($(this).closest('tr').children()[4].textContent);
+            $("#txtDesc").val($(this).closest('tr').children()[5].textContent);
+            $("#txtOwner").val($(this).closest('tr').children()[6].textContent);
+            $("#txtAcquired").val($(this).closest('tr').children()[7].textContent);
+            $("#txtActionBy").val($(this).closest('tr').children()[8].textContent);
+        });
+        </script>
+    </footer>
+    
+</body>
+
+</html>

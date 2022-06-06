@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Change User Role</title>
+    <%- include('../partials/head'); %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <link rel='stylesheet' type='text/css' href='/css/alert.css' />
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+    
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+            
+            <% if(typeof success != 'undefined') { %>
+                <div class="alertsuccess">
+                  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                  <strong>Successfully Updated!</strong>
+                </div>
+                <% } %>
+            <!-- Content Here! -->
+            <h3> Change an user's role </h3>
+
+            <form method="post" action="/changeUserRole" autocomplete="off">
+                <div class="form-group">
+                  <label for="exampleFormControlInput1">Officer's Name:</label>
+                  <select class="form-control" name='username' placeholder="Select officer name">
+                    <% for(var i=0; i < ulResults.length; i++) { %>
+                    <option value= <%= ulResults[i].username %>> <%= ulResults[i].username %></option> 
+                    <% } %>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="exampleFormControlSelect2">Select Role:</label>
+                  <select class="form-control" name='role' id="exampleFormControlSelect1">
+                    <option value='admin'>Admin</option>
+                    <option value='manager'>Manager</option>
+                    <option value='investigator'>Investigator</option>
+                  </select>
+                </div>
+                <br>
+                <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+              </form>
+
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+    <script>
+        $(document).ready(function(){
+
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        maxItemCount:1,
+        searchResultLimit:5,
+        renderChoiceLimit:5
+        });
+        
+        function clicked(e)
+        {
+            if(!confirm('Are you sure?')) {
+                e.preventDefault();
+            }
+        }
+
+        });
+    </script>
+    
+</body>
+
+</html>

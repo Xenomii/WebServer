@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Add User</title>
+    <head> <%- include('../partials/head'); %> </head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <link rel='stylesheet' type='text/css' href='/css/alert.css' />
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+    
+</head>
+
+<body>
+
+  
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+          <% if(typeof error != 'undefined') { %>
+            <% if(error === 0) { %>
+              <div class="alertsuccess">
+                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                <strong>Successfully Added!</strong> The password for the user is: <%= userpass %>
+              </div>
+              <% } else { %>
+              <div class="alertfail">
+                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                <strong>Error Detected </strong><%= error %>
+              </div>
+          <% }%>
+          <% }%>
+
+
+
+            <!-- Content Here! -->
+            <h3> Add User </h3>
+
+           <form class="needs-validation" novalidate method="post" action="/addUser" autocomplete="off">
+                    <div class="form-group">
+                        <label for="exampleFormControlInput1">Officer's Username</label>
+                        <input type="text" name="username" pattern="[A-Za-z0-9]+" class="form-control" id="exampleFormControlInput1" placeholder="Officer's Username" required>
+                        <div class="valid-feedback">Valid.</div>
+                        <div class="invalid-feedback">Please enter a valid username. Special characters are not allowed.</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="exampleFormControlInput1">Officer's Email</label>
+                        <input type="email" name="email" pattern="[a-zA-Z0-9._%+-]+@[a-z0-9.-]+\.[a-zA-Z]{2,4}" class="form-control" id="exampleFormControlInput1" placeholder="Officer's Email" required>
+                        <div class="valid-feedback">Valid.</div>
+                        <div class="invalid-feedback">Please enter an valid email.</div>
+                    </div> 
+                    
+                    <div class="form-group">
+                        <label for="exampleFormControlSelect2">Select Role:</label>
+                        <select class="form-control" name='role' id="exampleFormControlSelect1">
+                          <option value='admin'>Admin</option>
+                          <option value='manager'>Manager</option>
+                          <option value='investigator'>Investigator</option>
+                        </select>
+                      </div>
+                      <br>
+                    <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+              </form>
+
+
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+    <script>
+        $(document).ready(function(){
+
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        maxItemCount:1,
+        searchResultLimit:5,
+        renderChoiceLimit:5
+        });
+
+        // Disable form submissions if there are invalid fields
+        (function() {
+          'use strict';
+          window.addEventListener('load', function() {
+            // Get the forms we want to add validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+              form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+              }, false);
+            });
+          }, false);
+        })();
+        });
+
+        function clicked(e)
+        {
+            if(!confirm('Are you sure?')) {
+                e.preventDefault();
+            }
+        }
+    </script>
+
+    <!-- <script>
+        // Disable form submissions if there are invalid fields
+        (function() {
+          'use strict';
+          window.addEventListener('load', function() {
+            // Get the forms we want to add validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+              form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+              }, false);
+            });
+          }, false);
+        })();
+        </script> -->
+    
+</body>
+
+</html>

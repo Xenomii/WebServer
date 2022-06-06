@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>View Cases</title>
+
+    <head>
+        <%- include('../partials/head'); %>
+    </head>
+    <style type="text/css">
+        h3 span {
+            font-size: 22px;
+        }
+        
+        h3 input.search-input {
+            width: 300px;
+            margin-left: auto;
+            float: right
+        }
+        
+        .mt32 {
+            margin-top: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+            <!-- Page Content  -->
+            <div id="content">
+                <!-- Top Bar  -->
+                <%- include('../partials/topNav'); %>
+                    <h3>
+                        <span>Displaying Chain of Custody for Case Name</Name></span>
+                    </h3>
+                    <select class="form-select" aria-label="Default select example">
+                        <option selected>Select Case</option>
+                        <option value="1">Case 1</option>
+                        <option value="2">Case 2</option>
+                        <option value="3">Case 3</option>
+                      </select>
+                    <table class="table table-striped mt32 customers-list">
+                        <thead>
+                            <tr>
+                                <th>Evidence Name</th>
+                                <th>Timestamp</th>
+                                <th>Event</th>
+                                <th>IP Address</th>
+                                <th>Hash</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Image 1</td>
+                                <td>12 August 2019, 20:00hrs</td>
+                                <td>Added to blockchain</td>
+                                <td>169.10.10.10</td>
+                                <td>kn321831ndfa0d9ad321</td>
+                                <td>Screenshot of suspect's internet activities</td>
+                            </tr>
+                            <tr>
+                                <td>Geolocation of Suspect</td>
+                                <td>12 August 2019, 20:05hrs</td>
+                                <td>Added to blockchain</td>
+                                <td>169.10.10.10</td>
+                                <td>dadadkeqkndnq21331</td>
+                                <td>Location of suspect at 10th August 2019, 16:00hrs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button class="btn"><i class="fa fa-download"></i> Download CoC</button>
+            </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+
+    <script>
+        (function(document) {
+            'use strict';
+
+            var TableFilter = (function(myArray) {
+                var search_input;
+
+                function _onInputSearch(e) {
+                    search_input = e.target;
+                    var tables = document.getElementsByClassName(search_input.getAttribute('data-table'));
+                    myArray.forEach.call(tables, function(table) {
+                        myArray.forEach.call(table.tBodies, function(tbody) {
+                            myArray.forEach.call(tbody.rows, function(row) {
+                                var text_content = row.textContent.toLowerCase();
+                                var search_val = search_input.value.toLowerCase();
+                                row.style.display = text_content.indexOf(search_val) > -1 ? '' : 'none';
+                            });
+                        });
+                    });
+                }
+
+                return {
+                    init: function() {
+                        var inputs = document.getElementsByClassName('search-input');
+                        myArray.forEach.call(inputs, function(input) {
+                            input.oninput = _onInputSearch;
+                        });
+                    }
+                };
+            })(Array.prototype);
+
+            document.addEventListener('readystatechange', function() {
+                if (document.readyState === 'complete') {
+                    TableFilter.init();
+                }
+            });
+
+        })(document);
+    </script>
+</body>
+
+</html>

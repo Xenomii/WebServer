@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Add User via CSV</title>
+    <head> <%- include('../partials/head'); %> </head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <link rel='stylesheet' type='text/css' href='/css/alert.css' />
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+    
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+          <% if(typeof error != 'undefined') { %>
+              <% if(error === 0) { %>
+                <div class="alertsuccess">
+                  <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                  <strong>Successfully Added!</strong>
+                </div>
+
+                <table id="forDownload" class="table table-striped mt32 customers-list" style="display:none">
+                  <thead>
+                      <tr>
+                          <th>email</th>
+                          <th>username</th>
+                          <th>role</th>
+                          <th>password</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <% for(var i=0; i < results.length; i++) { %>
+                              <td><%= results[i]['email'] %></td>
+                              <td><%= results[i]['username'] %></td>
+                              <td><%= results[i]['role'] %></td>
+                              <td><%= results[i]['password'] %></td>
+                      </tr>
+                      <% } %>
+                  </tbody>
+              </table>
+            <% } else {%>
+              <div class="alertfail">
+                <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+                <strong>Error Detected </strong><%= error%>
+              </div>
+            <% }%>
+            <% }%>
+
+
+            
+            <!-- Content Here! -->
+            <h3> Add Users </h3>
+
+            <form method="post" action="/addUserCSV" enctype="multipart/form-data" autocomplete="off">
+                    <div class="form-group">
+                        <label for="exampleFormControlInput1" class="form-label">Default file input example</label>
+                        <input name="uploadFile" accept=".csv" class="form-control" type="file" id="formFile">
+                    </div>
+                    <br>
+                    <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+                    
+                    <% if(typeof error != 'undefined') { %>
+                      <% if(error === 0) { %>
+                        <button onClick="exportTableToCSV('Users.csv')" class="btn btn-dark">Download Users Info CSV</button>
+                    <% }%>
+                    <% }%>
+
+              </form>
+
+
+
+
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+    <script>
+        $(document).ready(function(){
+
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        maxItemCount:1,
+        searchResultLimit:5,
+        renderChoiceLimit:5
+        });
+
+        // Disable form submissions if there are invalid fields
+        (function() {
+          'use strict';
+          window.addEventListener('load', function() {
+            // Get the forms we want to add validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+              form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+              }, false);
+            });
+          }, false);
+        })();
+        });
+
+        function clicked(e)
+        {
+            if(!confirm('Are you sure?')) {
+                e.preventDefault();
+            }
+        }
+    </script>
+
+    <script>
+      function downloadCSV(csv, filename) {
+          var csvFile;
+          var downloadLink;
+          csvFile = new Blob([csv], {type: "text/csv"});
+          downloadLink = document.createElement("a");
+          downloadLink.download = filename;
+          downloadLink.href = window.URL.createObjectURL(csvFile);
+          downloadLink.style.display = "none";
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+      }
+      
+      function exportTableToCSV(filename) {
+          var csv = [];
+          var rows = document.querySelectorAll("#forDownload tr");
+          var r2
+              for (var i = 0; i < rows.length; i++) {
+              var row = [], cols = rows[i].querySelectorAll("td, th");
+      
+              for (var j = 0; j < cols.length; j++)
+              row.push('"' + cols[j].innerText + '"');
+      
+              csv.push(row.join(","));
+          }
+          downloadCSV(csv.join("\n"), filename);
+      }
+  </script>
+    <!-- <script>
+        // Disable form submissions if there are invalid fields
+        (function() {
+          'use strict';
+          window.addEventListener('load', function() {
+            // Get the forms we want to add validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+              form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+              }, false);
+            });
+          }, false);
+        })();
+        </script> -->
+    
+</body>
+
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Update Case</title>
+    <%- include('../partials/head'); %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+    
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+            <h3>
+                <span>Case ID: <%= caseuuid %></span>
+                <br>
+                <span>Case Name: <%= casename %></span>
+            </h3>
+            <br><br>
+
+            <h4><span>Add Case Officer</span></h4>
+            <form method="post" action="/updateCase/?caseId=<%=caseid%>" autocomplete="off">                
+                <div class="form-group">
+                    <label for="exampleFormControlSelect2">Select Officers:</label>
+                    <select class="form-control" name='officerlist' placeholder="Select officer name" id="choices-multiple-remove-button" multiple>
+                        <% for(var i=0; i < ulResults.length; i++) { %>
+                        <option value= <%= ulResults[i].id %>> <%= ulResults[i].id + ' - ' + ulResults[i].username %></option>                         
+                        <% } %>
+                    </select>
+                </div>                
+
+                <br>
+                <h4><span>Case Details</span></h4>
+                <div class="form-group">
+                    <label for="exampleFormControlTextarea1">Case Details</label>
+                    <textarea name="casedetails" class="form-control" placeholder="Specify new case details" id="exampleFormControlTextarea1" rows="3" required><%=casedetails%></textarea>
+                </div>
+                <br>
+                <button onclick="clicked(event)" class="btn btn-dark">Save</button>
+                <button onClick="window.location='mDashboard';" class="btn btn-dark">Cancel</button>
+            </form>
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+
+    <script>
+        $(document).ready(function(){
+
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        // maxItemCount:5,
+        // searchResultLimit:5,
+        // renderChoiceLimit:5
+        });
+
+
+        });
+    </script>
+
+    <script>
+        function clicked(e)
+        {
+            if(!confirm('Are you sure?')) {
+                e.preventDefault();
+            }
+        }
+    </script>
+
+    
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Add Case</title>
+    <%- include('../partials/head'); %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+    
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+            <!-- Content Here! -->
+            <h3> New Case </h3>
+
+            <form method="post" action="/addCase" autocomplete="off">
+                <div class="form-group">
+                  <label for="exampleFormControlInput1">Case Name</label>
+                  <input name="casename" type="name" class="form-control" id="exampleFormControlInput1" placeholder="Case Name" required>
+                </div>
+                <div class="form-group">
+                  <label for="exampleFormControlSelect2">Select Officers:</label>
+                  <select multiple="multiple" class="form-control" name='officerlist' placeholder="Select officer name" id="choices-multiple-remove-button"
+                  multiple>
+                    <% for(var i=0; i < ulResults.length; i++) { %>
+                    <option value= <%= ulResults[i].id %>> <%= ulResults[i].id + ' - ' + ulResults[i].username %></option> 
+                    <% } %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exampleFormControlTextarea1">Case Details</label>
+                  <textarea name="casedetails" class="form-control" id="exampleFormControlTextarea1" rows="3" required></textarea>
+                </div>
+                <br>
+                <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+              </form>
+
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+
+    <script>
+        $(document).ready(function(){
+
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        // maxItemCount:10,
+        // searchResultLimit:5,
+        // renderChoiceLimit:5
+        });
+
+
+        });
+    </script>
+
+    <script>
+      function clicked(e)
+      {
+          if(!confirm('Are you sure?')) {
+              e.preventDefault();
+          }
+      }
+    </script>
+
+    
+</body>
+
+</html>

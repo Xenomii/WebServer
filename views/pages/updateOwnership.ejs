@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Change Evidence Ownership</title>
+    <%- include('../partials/head'); %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+             
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+            <!-- Content Here! -->
+            <h3> Update Evidence </h3>
+
+            <form method="post" action="/updateOwnership/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>" autocomplete="off">
+                <div class="form-group">
+                    <label for="exampleFormControlInput1">Evidence Name</label>
+                    <input name="evidenceName" type="name" class="form-control" id="exampleFormControlInput1" placeholder="<%= evidenceName %>" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Change Evidence Ownership</label>
+                    <select name="officerName" class="form-select" aria-label="Default select example">
+                        <% for(var i=0; i < officerList.length; i++) { %>
+                            <option value= <%= officerList[i].id %>> <%= officerList[i].username%></option> 
+                            <% } %>
+                    </select>
+                            
+                </form>
+                           
+                <br>
+                <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+              </form>
+
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+    <script>
+        $(document).ready(function(){
+
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        maxItemCount:5,
+        searchResultLimit:5,
+        renderChoiceLimit:5
+        });
+        });
+    </script>
+    <script>
+        var dateEl = document.getElementById('date');
+        var timeEl = document.getElementById('time');
+
+        document.getElementById('date-output').innerHTML = dateEl.type === 'date';
+        document.getElementById('time-output').innerHTML = timeEl.type === 'time';
+    </script>
+
+    <script>
+        function clicked(e)
+        {
+            if(!confirm('Are you sure?')) {
+                e.preventDefault();
+            }
+        }
+    </script>
+
+    
+</body>
+
+</html>

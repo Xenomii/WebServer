@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard</title>
+    <head>
+        <%- include('../partials/head'); %>
+    </head>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <style type="text/css">
+        h3 span {
+            font-size: 22px;
+        }
+        
+        h3 input.search-input {
+            width: 300px;
+            margin-left: auto;
+            float: right
+        }
+        
+        .mt32 {
+            margin-top: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+            <!-- Page Content  -->
+            <div id="content">
+                <!-- Top Bar  -->
+                <%- include('../partials/topNav'); %>
+
+                <!-- Admin  -->
+                <% if (user_role === 'admin') { %>
+                    <h3>
+                        <span>User List</span>
+                    </h3>
+                    <table id="example" class="table table-striped mt32 customers-list" >
+                        <thead>
+                            <tr>
+                                <th>Officer ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <% for(var i=0; i < ulResults.length; i++) { %>
+                                    <td><%= ulResults[i].id %></td>
+                                    <td><%= ulResults[i].username %></td>
+                                    <td><%= ulResults[i].email %></td>
+                                    <td><%= ulResults[i].role %></td>
+                                    <td><button type="submit" class="btn btn-dark" onClick="window.location='changeUserRole';">Edit</button></td>
+                                        <td><button type="submit" class="btn btn-dark" onClick="window.location='/removeUser/?id=<%=ulResults[i].id%>';" >Remove</button></td>
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                    <br><hr>
+                    <button onClick="window.location='addUser';" class="btn btn-dark">Add User</button>
+                    <button onClick="window.location='addUserCSV';" class="btn btn-dark">Add Users via CSV</button>
+
+
+                <!-- Manager  -->
+                <% } else if (user_role === 'manager') { %>
+                    <h3>
+                        <span>Cases</span>
+                    </h3>
+                    <table id="example" class="table table-striped mt32 customers-list" >
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Case Name</th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <% for(var i=0; i < caseUuid.length; i++) { %>
+                                    <td><%= caseUuid[i] %></td>
+                                    <td><%= caseName[i] %></td>
+                                    <td><button type="submit" class="btn btn-dark" onClick="window.location='caseInfo/?caseId=<%=i%>';">View Case Info</button></td>
+                                    <% if (closed[i] === false) { %>
+                                        <td><button type="submit" class="btn btn-dark" onClick="window.location='updateCase/?caseId=<%=i%>';">Edit Case</button></td>
+                                    <% } else { %>
+                                        <td><button type="submit" class="btn btn-dark" disabled>Edit Case</button></td>
+                                    <% } %>
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                    <br><hr>
+                    <button onClick="window.location='addCase';" class="btn btn-dark">Add Case</button>
+
+                <!-- Investigator  -->
+                <% } else { %>
+                    <h3>
+                        <span>Cases</span>
+                    </h3>
+                    <table id="example" class="table table-striped mt32 customers-list" >
+                        <thead>
+                            <tr>
+                                <th>Case ID</th>
+                                <th>Case Name</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <% for(var i=0; i < caseUuid.length; i++) { %>
+                                    <td><%= caseUuid[i] %></td>
+                                    <td><%= caseName[i] %></td>
+                                    <td><button type="submit" class="btn btn-dark" onClick="window.location='caseInfo/?caseId=<%=i%>';">View Case Info</button></td>
+                            </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                <% } %>
+            </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('#example').DataTable();
+            } );
+        </script>
+        <script>
+            function clicked(e)
+            {
+                if(!confirm('Are you sure?')) {
+                    e.preventDefault();
+                }
+            }
+        </script>
+    </footer>    
+</body>
+
+</html>

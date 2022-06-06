@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Case Information</title>
+    <%- include('../partials/head'); %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+    <script src="/js/events.js"></script>    
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar  -->
+        <%- include('../partials/sidebar'); %>
+
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
+
+            <h3>
+                        <span>Case ID: <%= caseuuid %></span>
+                        <br>
+                        <span>Case Name: <%= casename %></span>
+            </h3>
+            <br><br>
+
+            <h4><span>Case Officers</span></h4>
+            <table class="table table-striped mt32 customers-list">
+                <thead>
+                    <tr>
+                        <th>Officer</th>
+                        <th>Role</th>
+                        <th>Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <% for(var i=0; i < officerList.length; i++) { %>
+                            <tr>
+                                <td>
+                                    <%= officerList[i].username %>
+                                </td>
+                                <td>
+                                    <%= officerList[i].role %>
+                                </td>
+                                <td>
+                                    <% if (officerList[i].deleted === 0) { %> 
+                                        Active
+                                    <% } else { %>  
+                                        Not Active
+                                    <% }  %>                                    
+                                </td>
+                            </tr>
+                        <% } %>                    
+                </tbody>
+            </table>
+
+            <br>          
+            <h4><span>Case Details</span></h4>
+            <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" readonly><%=caseDetails%></textarea>
+            
+            <br><br>            
+            <h4><span>Evidence List</span></h4>
+            <table class="table table-striped mt32 customers-list">
+                <thead>
+                    <tr>
+                        <th>Evidence Name</th>
+                        <th>Details</th>
+                        <th></th>
+                        <% if (closed === false) { %>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <% } %>
+
+
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <% for(var i=0; i < evidenceList.length; i++) { %>
+                            <td><%= evidenceList[i][1] %></td>
+                            <td><%= evidenceList[i][6] %></td>
+                            <td><button type="submit" class="btn btn-dark" onClick="window.location='/evidenceList/?caseId=<%=caseid%>&evidenceId=<%=i%>';">View</button></td>
+                            <% if (closed === false) { %>
+                                <td><button type="submit" class="btn btn-dark" onClick="window.location='/updateEvidence/?caseId=<%=caseid%>&evidenceId=<%=i%>';">Edit</button></td>
+                                <td><button type="submit" class="btn btn-dark" onClick="redirectClick('/download/?caseId=<%=caseid%>&evidenceId=<%=i%>&pathId=<%=i%>', 'Download will be logged on the blockchain. Confirm?')" >Download</button></td>
+                                <td><button type="submit" class="btn btn-dark" onClick="window.location='/updateOwnership/?caseId=<%=caseid%>&evidenceId=<%=i%>';" >Change Ownership</button></td>
+                            <% } %>
+                        </tr>
+                        <% } %>                    
+                </tbody>
+            </table>
+            <td> 
+                <% if (closed === false) { %>
+                <button type="submit" class="btn btn-dark" onClick="window.location='/addEvidence/?caseId=<%=caseid%>';">Add New Evidence</button></td>
+                <% } %>
+
+
+            <br><br>
+            <hr>
+            <button onClick="window.location='/viewChainOfCustody/?caseId=<%=caseid%>';" class="btn btn-dark">Display All CoC</button>
+            <% if (user_role === 'manager') { %>
+                <% if (closed === false) { %>
+                    <button type="submit" class="btn btn-dark"  onclick="clicked(event); window.location='/closeCase/?caseId=<%=caseid%>';">Close Case</button>
+            <% }} %>
+            <!-- Content Ends Here! -->
+        </div>
+    </div>
+
+    <footer>
+        <%- include('../partials/footer'); %>
+    </footer>
+
+    <script>
+        function clicked(e)
+        {
+            if(!confirm('Are you sure?')) {
+                e.preventDefault();
+            }
+        }
+      </script>
+</body>
+
+</html>

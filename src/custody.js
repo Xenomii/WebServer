@@ -596,6 +596,41 @@ router.get('/updateOwnership', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantA
   });
 });
 
+// Investigate Page
+router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
+  try {
+    if (isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
+    var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
+    var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
+    if (!caseUuid || !evidenceUuid) throw new Error("Invalid Case/Evidence UUID");
+  } catch (err) {
+    console.error(err);
+    res.redirect('/dashboard');
+    return;
+  }
+  
+  burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
+    var latestEvidence = ret.retEvidence.split('|');  
+    burrow.contract.GetCaseOfficers(caseUuid).then(value => {
+      var caseOfficers = value.allCaseOfficers;
+      var filtered = caseOfficers.filter(function(value, index, arr) {return value != latestEvidence[7];});
+
+      db.getCaseOfficerDetails(filtered,1).then(officerList => {
+        res.render('pages/updateOwnership',{
+          user_role: req.session.role,
+          name: req.session.name,
+          caseuuid: caseUuid,
+          evidenceuuid: evidenceUuid,
+          officerList: officerList,
+          evidenceName: latestEvidence[1],
+          caseid: req.query.caseId,
+          evidenceid: req.query.evidenceId
+        });
+      }).catch(err => res.send(handlerError(err)))   
+    }); 
+  });
+});
+
 // Update Ownership Post Page
 router.post('/updateOwnership', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
   try {

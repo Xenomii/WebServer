@@ -22,25 +22,24 @@
             <!-- Content Here! -->
             <h3> Investigate Evidence Here </h3>
 
-            <form method="post" action="/updateOwnership/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>" autocomplete="off">
+            <form method="post" action="/investigate/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>&pathId=<%=pathid%>" autocomplete="off">
                 <div class="form-group">
                     <label for="exampleFormControlInput1">Evidence Name</label>
                     <input name="evidenceName" type="name" class="form-control" id="exampleFormControlInput1" placeholder="<%= evidenceName %>" disabled>
                 </div>
                 <div class="form-group">
-                    <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Change Evidence Ownership</label>
-                    <select name="officerName" class="form-select" aria-label="Default select example">
-                        <% for(var i=0; i < officerList.length; i++) { %>
-                            <option value= <%= officerList[i].id %>> <%= officerList[i].username%></option> 
-                            <% } %>
+                    <label for="exampleFormControlTextarea1" style="margin-top: 20px;">List of Forensic Tools</label>
+                    <select name="toolName" class="form-select" aria-label="Default select example">
+                        <option value="1">Wireshark</option>
                     </select>
                             
                 </form>
                            
                 <br>
-                <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+                <button type="submit" onclick="clicked(event)" class="btn btn-dark">Run Tool</button>
               </form>
 
+              <textarea style="margin-top: 1%;" class="form-control" id="exampleFormControlTextarea1" rows="20" readonly><%=investigateDetails%></textarea>
             <!-- Content Ends Here! -->
         </div>
     </div>

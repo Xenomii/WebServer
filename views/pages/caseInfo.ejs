@@ -89,7 +89,7 @@
                                 <td><button type="submit" class="btn btn-dark" onClick="window.location='/updateEvidence/?caseId=<%=caseid%>&evidenceId=<%=i%>';">Edit</button></td>
                                 <td><button type="submit" class="btn btn-dark" onClick="redirectClick('/download/?caseId=<%=caseid%>&evidenceId=<%=i%>&pathId=<%=i%>', 'Download will be logged on the blockchain. Confirm?')" >Download</button></td>
                                 <td><button type="submit" class="btn btn-dark" onClick="window.location='/updateOwnership/?caseId=<%=caseid%>&evidenceId=<%=i%>';" >Change Ownership</button></td>
-                                <td><button type="submit" class="btn btn-dark" onClick="window.location='/investigate/?caseId=<%=caseid%>&evidenceId=<%=i%>';" >Investigate</button></td>
+                                <td><button type="submit" class="btn btn-dark" onClick="window.location='/investigate/?caseId=<%=caseid%>&evidenceId=<%=i%>&pathId=<%=i%>';" >Investigate</button></td>
                             <% } %>
                         </tr>
                         <% } %>                    

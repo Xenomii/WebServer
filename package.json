@@ -1,6 +1,9 @@
 {
   "name": "node-ejs",
   "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
   "dependencies": {
     "@hyperledger/burrow": "^0.34.0",
     "@monax/burrow": "0.0.3",
@@ -15,5 +18,8 @@
     "mysql2": "^2.2.5",
     "nodemailer": "^6.6.2",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
   }
 }

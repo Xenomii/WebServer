@@ -29,10 +29,16 @@
                 </div>
                 <div class="form-group">
                     <label for="exampleFormControlTextarea1" style="margin-top: 20px;">List of Forensic Tools</label>
-                    <select name="toolName" class="form-select" aria-label="Default select example">
-                        <option value="1">Wireshark</option>
+                    <select id="toolName" name="toolName" class="form-select" aria-label="Default select example">
+                        <option value="wireshark">Wireshark</option>
+                        <option value="test">Test</option>
                     </select>
-                            
+                    <% if (typeof toolName !== 'undefined') { %>
+                         <script>
+                             let toolName = '<%-toolName%>';
+                             document.getElementById('toolName').value = toolName;
+                         </script>
+                    <% } %>
                 </form>
                            
                 <br>

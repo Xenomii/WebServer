@@ -703,44 +703,61 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     res.redirect('/dashboard');
     return;
   }
+  
+  var toolName = '';
+  var investigateDetails = '';
 
-  // Runs the Wireshark tool
-  // Note: Mechanism to identify which tool is selected from the website has not been implemented.
-  console.log(`Running wireshark on ${filePath} now...\n`);
-  exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      res.redirect('/dashboard');
-    }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      res.redirect('/dashboard');
-    }
+  //Check for tool to run
+  if(req.body.toolName == "wireshark") {
 
-    // This information might be useful to record the investigative action onto the blockchain
-    burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
-      var latestEvidence = ret.retEvidence.split('|');
-      burrow.contract.GetCaseOfficers(caseUuid).then(value => {
-        var caseOfficers = value.allCaseOfficers;
-        var filtered = caseOfficers.filter(function (value, index, arr) { return value != latestEvidence[7]; });
+    // Runs the Wireshark tool
+    // Note: Mechanism to identify which tool is selected from the website has not been implemented.
+    console.log(`Running wireshark on ${filePath} now...\n`);
+    exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        res.redirect('/dashboard');
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        res.redirect('/dashboard');
+      }
+      toolName = 'wireshark';
+      investigateDetails = stdout;
+    });
+    
+  } else if (req.body.toolName == 'test') {
+    //Placeholder code, replace with tool execution afterwards
+    console.log('TEST\n');
+    toolName = 'test';
+    investigateDetails = 'Placeholder text for results after executing tool';
+  };
+  
+  // This information might be useful to record the investigative action onto the blockchain
+  burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
+    var latestEvidence = ret.retEvidence.split('|');
+    burrow.contract.GetCaseOfficers(caseUuid).then(value => {
+      var caseOfficers = value.allCaseOfficers;
+      var filtered = caseOfficers.filter(function (value, index, arr) { return value != latestEvidence[7]; });
 
-        db.getCaseOfficerDetails(filtered, 1).then(officerList => {
-          res.render('pages/investigate', {
-            user_role: req.session.role,
-            name: req.session.name,
-            caseuuid: caseUuid,
-            evidenceuuid: evidenceUuid,
-            officerList: officerList,
-            evidenceName: latestEvidence[1],
-            caseid: req.query.caseId,
-            evidenceid: req.query.evidenceId,
-            pathid: req.query.pathId,
-            investigateDetails: stdout
-          });
-        }).catch(err => res.send(handlerError(err)))
-      });
+      db.getCaseOfficerDetails(filtered, 1).then(officerList => {
+        res.render('pages/investigate', {
+          user_role: req.session.role,
+          name: req.session.name,
+          caseuuid: caseUuid,
+          evidenceuuid: evidenceUuid,
+          officerList: officerList,
+          evidenceName: latestEvidence[1],
+          caseid: req.query.caseId,
+          evidenceid: req.query.evidenceId,
+          pathid: req.query.pathId,
+          toolName: toolName,
+          investigateDetails: investigateDetails
+        });
+      }).catch(err => res.send(handlerError(err)))
     });
   });
+ 
 });
 
 module.exports = router;

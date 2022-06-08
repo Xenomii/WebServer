@@ -655,6 +655,7 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
     if (isNaN(Number(req.query.pathId)) || isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
     var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
     var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
+    // This specifies where the file is stored
     var filePath = req.session.currentEvidencePaths[req.query.pathId];
     if (!caseUuid || !evidenceUuid || !filePath) throw new Error("Invalid Case/Evidence UUID or File Path");
   } catch (err) {
@@ -663,6 +664,7 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
     return;
   }
 
+  // Not sure if all of this information is needed to just display the page.
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');
     burrow.contract.GetCaseOfficers(caseUuid).then(value => {
@@ -702,6 +704,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     return;
   }
 
+  // Runs the Wireshark tool
+  // Note: Mechanism to identify which tool is selected from the website has not been implemented.
   console.log(`Running wireshark on ${filePath} now...\n`);
   exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
     if (error) {
@@ -713,6 +717,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       res.redirect('/dashboard');
     }
 
+    // This information might be useful to record the investigative action onto the blockchain
     burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
       var latestEvidence = ret.retEvidence.split('|');
       burrow.contract.GetCaseOfficers(caseUuid).then(value => {

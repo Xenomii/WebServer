@@ -34,14 +34,14 @@ router.get('/caseInfo', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('
     burrow.contract.GetCaseClosed(caseUuid),
     burrow.contract.GetCaseInfo(caseUuid)
   ]).then(ret => {
-    db.getCaseOfficerDetails(ret[1].uuid,0).then(officerList => {    
+    db.getCaseOfficerDetails(ret[1].uuid, 0).then(officerList => {
       var evidences = burrow.formatToArray(ret[1].latestEvidences);
       req.session.currentEvidenceList = {};
-      for(var i=0; i < evidences.length; i++) {
+      for (var i = 0; i < evidences.length; i++) {
         req.session.currentEvidenceList[evidences[i][0]] = evidences[i][1];
       }
       if (Object.keys(req.session.currentEvidenceList).length === 0) {
-        res.render('pages/caseInfo',{
+        res.render('pages/caseInfo', {
           name: req.session.name,
           user_role: req.session.role,
           caseuuid: caseUuid,
@@ -51,7 +51,7 @@ router.get('/caseInfo', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('
           officerList: officerList,
           closed: ret[0].caseClosed,
           caseid: req.query.caseId
-          });
+        });
       } else {
         let evidenceUUIDList = Object.keys(req.session.currentEvidenceList);
         dbfs.getEvidencePath(evidenceUUIDList).then(evidencePaths => {
@@ -65,8 +65,8 @@ router.get('/caseInfo', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('
             }
           }
 
-          db.getCaseOfficerDetails(ret[1].uuid,0).then(officerList => {
-            res.render('pages/caseInfo',{
+          db.getCaseOfficerDetails(ret[1].uuid, 0).then(officerList => {
+            res.render('pages/caseInfo', {
               name: req.session.name,
               user_role: req.session.role,
               caseuuid: caseUuid,
@@ -107,24 +107,24 @@ router.get('/download', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('
     latestEvidence[5] = req.ip.slice(7);
     latestEvidence[7] = '-';
     latestEvidence[10] = req.session.uuid;
-    
+
     burrow.contract.LogEvidence(latestEvidence).then(() => {
       res.download(filePath);
     });
 
 
-  }).catch(err => res.send(handlerError(err)))  
+  }).catch(err => res.send(handlerError(err)))
 });
 
 
 // [GET] Add Case Page
 router.get('/addCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req, res) {
   db.getUL().then((results) => {
-    var ulResults = results.filter(function( obj ) {
+    var ulResults = results.filter(function (obj) {
       return obj.id !== req.session.uuid;
     });
 
-    res.render('pages/addCase',{
+    res.render('pages/addCase', {
       name: req.session.name,
       user_role: req.session.role,
       ulResults: ulResults
@@ -146,7 +146,7 @@ router.post('/addCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req,
     else if (req.body.officerlist) officerlist.push(req.body.officerlist);
     burrow.contract.AddCase(uuid, casename, officerlist, casedetails).then().catch(err => console.error(err));
     res.redirect('/dashboard');
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     res.status(400).json("Invalid Input");
   }
@@ -171,8 +171,8 @@ router.get('/updateCase', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess
     burrow.contract.GetCaseOfficers(caseUuid).then(ret => {
       db.getUL().then((results) => {
         var ulResults = results
-        ulResults = ulResults.filter(user => {return ret.allCaseOfficers.indexOf(user.id) < 0;})
-        res.render('pages/updateCase',{
+        ulResults = ulResults.filter(user => { return ret.allCaseOfficers.indexOf(user.id) < 0; })
+        res.render('pages/updateCase', {
           name: req.session.name,
           user_role: req.session.role,
           ulResults: ulResults,
@@ -207,11 +207,11 @@ router.post('/updateCase', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
 
     burrow.contract.EditCaseDetails(caseUuid, casedetails).then(() => {
       if (officerlist.length > 0)
-        burrow.contract.AddUUIDToCase(caseUuid, officerlist).then(() => {res.redirect('/dashboard');});
+        burrow.contract.AddUUIDToCase(caseUuid, officerlist).then(() => { res.redirect('/dashboard'); });
       else
         res.redirect('/dashboard');
     });
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     res.status(400).json("Invalid Input");
   }
@@ -244,18 +244,18 @@ router.get('/evidenceList', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     }
 
     let uniqueOfficer = [];
-    for (let i=0; i < evidenceList.length; i++){
+    for (let i = 0; i < evidenceList.length; i++) {
       if (uniqueOfficer.indexOf(evidenceList[i][7]) === -1) uniqueOfficer.push(evidenceList[i][7]);
       if (uniqueOfficer.indexOf(evidenceList[i][9]) === -1) uniqueOfficer.push(evidenceList[i][9]);
     }
 
-    db.getCaseOfficerDetails(uniqueOfficer,0).then(officerList => {
-      for (let i=0; i < evidenceList.length; i++){
-        evidenceList[i][7] = officerList.find(({id}) => id == evidenceList[i][7]).username + ": " + evidenceList[i][7];
-        evidenceList[i][9] = officerList.find(({id}) => id == evidenceList[i][9]).username + ": " + evidenceList[i][9];
+    db.getCaseOfficerDetails(uniqueOfficer, 0).then(officerList => {
+      for (let i = 0; i < evidenceList.length; i++) {
+        evidenceList[i][7] = officerList.find(({ id }) => id == evidenceList[i][7]).username + ": " + evidenceList[i][7];
+        evidenceList[i][9] = officerList.find(({ id }) => id == evidenceList[i][9]).username + ": " + evidenceList[i][9];
       }
 
-      res.render('pages/evidenceList',{
+      res.render('pages/evidenceList', {
         user_role: req.session.role,
         name: req.session.name,
         caseid: req.query.caseId,
@@ -267,7 +267,7 @@ router.get('/evidenceList', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         hashresult: undefined
       });
     });
-  });  
+  });
 });
 
 
@@ -306,34 +306,36 @@ router.post('/evidenceList', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcc
           else break;
           i--;
         }
-    
+
         let uniqueOfficer = [];
-        let hashResult = {found: 0, num: -1, msg: "Evidence not found in CoC Blockchain."};
+        let hashResult = { found: 0, num: -1, msg: "Evidence not found in CoC Blockchain." };
         let numEvidence = 0;
-        for (let i=0; i < evidenceList.length; i++){
+        for (let i = 0; i < evidenceList.length; i++) {
           if (uniqueOfficer.indexOf(evidenceList[i][7]) === -1) uniqueOfficer.push(evidenceList[i][7]);
           if (uniqueOfficer.indexOf(evidenceList[i][9]) === -1) uniqueOfficer.push(evidenceList[i][9]);
           if (evidenceList[i][3] === "Added to Blockchain" || evidenceList[i][3] === "Update Evidence") {
             numEvidence++;
             if (evidenceList[i][4] === files.uploadFile.hash)
-                hashResult = {found: 2, num: numEvidence, msg: "Evidence found ", 
-                info: `<br>Timestamp: ${evidenceList[i][2]}<br>Unique Hash: ${evidenceList[i][4]}`}
+              hashResult = {
+                found: 2, num: numEvidence, msg: "Evidence found ",
+                info: `<br>Timestamp: ${evidenceList[i][2]}<br>Unique Hash: ${evidenceList[i][4]}`
+              }
           }
         }
-        
+
         if (hashResult.num === numEvidence) {
           hashResult.found = 1;
           hashResult.msg += "AND is the latest update on the CoC Blockchain.";
-	}
+        }
         else if (hashResult.num >= 0) hashResult.msg += "BUT is NOT the latest update on the CoC Blockchain.";
-        
-        db.getCaseOfficerDetails(uniqueOfficer,0).then(officerList => {
-          for (let i=0; i < evidenceList.length; i++){
-            evidenceList[i][7] = officerList.find(({id}) => id == evidenceList[i][7]).username + ": " + evidenceList[i][7];
-            evidenceList[i][9] = officerList.find(({id}) => id == evidenceList[i][9]).username + ": " + evidenceList[i][9];
+
+        db.getCaseOfficerDetails(uniqueOfficer, 0).then(officerList => {
+          for (let i = 0; i < evidenceList.length; i++) {
+            evidenceList[i][7] = officerList.find(({ id }) => id == evidenceList[i][7]).username + ": " + evidenceList[i][7];
+            evidenceList[i][9] = officerList.find(({ id }) => id == evidenceList[i][9]).username + ": " + evidenceList[i][9];
           }
 
-          res.render('pages/evidenceList',{
+          res.render('pages/evidenceList', {
             user_role: req.session.role,
             name: req.session.name,
             caseid: req.query.caseId,
@@ -345,9 +347,9 @@ router.post('/evidenceList', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcc
             hashresult: hashResult
           });
         });
-      });  
+      });
     });
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     res.redirect('/dashboard');
   }
@@ -364,7 +366,7 @@ router.get('/addEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
     return;
   }
 
-  res.render('pages/addEvidence',{
+  res.render('pages/addEvidence', {
     user_role: req.session.role,
     name: req.session.name,
     caseid: req.query.caseId
@@ -390,7 +392,7 @@ router.post('/addEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       next(err);
       return;
     }
-    
+
     let uid = uuidv4();
     let datetime = new Date(Date.now()).toISOString().slice(0, 19).replace('T', ' ');
     let hash = files.uploadFile.hash;
@@ -403,9 +405,9 @@ router.post('/addEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     let actionBy = req.session.uuid;
 
     try {
-      if (files.uploadFile.size === 0 || !evidenceName || !locTime || !evidenceDetails) 
+      if (files.uploadFile.size === 0 || !evidenceName || !locTime || !evidenceDetails)
         throw new Error("Missing Input");
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       res.status(400).json("Missing Input");
       return;
@@ -413,7 +415,7 @@ router.post('/addEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
 
     dbfs.addEvidence(uid, files.uploadFile.path, datetime, hash).then(result => {
       if (result) {
-        let evidence = [caseUuid,uid,evidenceName,datetime,eventLog,ip,hash,evidenceDetails,owner,locTime,actionBy];
+        let evidence = [caseUuid, uid, evidenceName, datetime, eventLog, ip, hash, evidenceDetails, owner, locTime, actionBy];
         burrow.contract.LogEvidence(evidence).then(() => {
           res.redirect('/caseInfo/?caseId=' + req.query.caseId);
         });
@@ -441,12 +443,12 @@ router.get('/updateEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAc
     res.redirect('/dashboard');
     return;
   }
-  
+
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');
     var locDateTime = latestEvidence[8].split(',');
 
-    res.render('pages/updateEvidence',{
+    res.render('pages/updateEvidence', {
       user_role: req.session.role,
       name: req.session.name,
       evidenceName: latestEvidence[1],
@@ -456,7 +458,7 @@ router.get('/updateEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAc
       caseid: req.query.caseId,
       evidenceid: req.query.evidenceId
     });
-  }).catch(err => res.send(handlerError(err)))   
+  }).catch(err => res.send(handlerError(err)))
 });
 
 
@@ -482,9 +484,9 @@ router.post('/updateEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantA
     }
 
     try {
-      if (files.uploadFile.size === 0 || !fields.evidenceDetails) 
+      if (files.uploadFile.size === 0 || !fields.evidenceDetails)
         throw new Error("Missing Input");
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       res.status(400).json("Missing Input");
       return;
@@ -492,7 +494,7 @@ router.post('/updateEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantA
 
     burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
       var latestEvidence = ret.retEvidence.split('|');
-      latestEvidence.unshift(caseUuid);  
+      latestEvidence.unshift(caseUuid);
       latestEvidence[3] = new Date(Date.now()).toISOString().slice(0, 19).replace('T', ' ');
       latestEvidence[4] = "Update Evidence";
       latestEvidence[5] = req.ip.slice(7);
@@ -530,18 +532,18 @@ router.get('/viewChainOfCustody', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.gra
     if (ret.retEvidence.length > 0) {
       var evidenceList = burrow.formatToArray(ret.retEvidence);
       uniqueOfficer = [];
-      for (let i=0; i < evidenceList.length; i++){
+      for (let i = 0; i < evidenceList.length; i++) {
         if (uniqueOfficer.indexOf(evidenceList[i][7]) === -1) uniqueOfficer.push(evidenceList[i][7]);
         if (uniqueOfficer.indexOf(evidenceList[i][9]) === -1) uniqueOfficer.push(evidenceList[i][9]);
       }
 
-      db.getCaseOfficerDetails(uniqueOfficer,0).then(officerList => {
-        for (let i=0; i < evidenceList.length; i++){
-          evidenceList[i][7] = officerList.find(({id}) => id == evidenceList[i][7]).username + ": " + evidenceList[i][7];
-          evidenceList[i][9] = officerList.find(({id}) => id == evidenceList[i][9]).username + ": " + evidenceList[i][9];
+      db.getCaseOfficerDetails(uniqueOfficer, 0).then(officerList => {
+        for (let i = 0; i < evidenceList.length; i++) {
+          evidenceList[i][7] = officerList.find(({ id }) => id == evidenceList[i][7]).username + ": " + evidenceList[i][7];
+          evidenceList[i][9] = officerList.find(({ id }) => id == evidenceList[i][9]).username + ": " + evidenceList[i][9];
         }
 
-        res.render('pages/viewChainOfCustody',{
+        res.render('pages/viewChainOfCustody', {
           user_role: req.session.role,
           name: req.session.name,
           caseuid: caseUuid,
@@ -551,7 +553,7 @@ router.get('/viewChainOfCustody', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.gra
       });
     } else {
       var evidenceList = [];
-      res.render('pages/viewChainOfCustody',{
+      res.render('pages/viewChainOfCustody', {
         user_role: req.session.role,
         name: req.session.name,
         caseuid: caseUuid,
@@ -575,15 +577,15 @@ router.get('/updateOwnership', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantA
     res.redirect('/dashboard');
     return;
   }
-  
+
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
-    var latestEvidence = ret.retEvidence.split('|');  
+    var latestEvidence = ret.retEvidence.split('|');
     burrow.contract.GetCaseOfficers(caseUuid).then(value => {
       var caseOfficers = value.allCaseOfficers;
-      var filtered = caseOfficers.filter(function(value, index, arr) {return value != latestEvidence[7];});
+      var filtered = caseOfficers.filter(function (value, index, arr) { return value != latestEvidence[7]; });
 
-      db.getCaseOfficerDetails(filtered,1).then(officerList => {
-        res.render('pages/updateOwnership',{
+      db.getCaseOfficerDetails(filtered, 1).then(officerList => {
+        res.render('pages/updateOwnership', {
           user_role: req.session.role,
           name: req.session.name,
           caseuuid: caseUuid,
@@ -593,99 +595,11 @@ router.get('/updateOwnership', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantA
           caseid: req.query.caseId,
           evidenceid: req.query.evidenceId
         });
-      }).catch(err => res.send(handlerError(err)))   
-    }); 
-  });
-});
-
-// Investigate Page
-router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
-  try {
-    if (isNaN(Number(req.query.pathId)) || isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
-    var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
-    var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
-    var filePath = req.session.currentEvidencePaths[req.query.pathId];
-    if (!caseUuid || !evidenceUuid || !filePath) throw new Error("Invalid Case/Evidence UUID or File Path");
-  } catch (err) {
-    console.error(err);
-    res.redirect('/dashboard');
-    return;
-  }
-  
-  burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
-    var latestEvidence = ret.retEvidence.split('|');  
-    burrow.contract.GetCaseOfficers(caseUuid).then(value => {
-      var caseOfficers = value.allCaseOfficers;
-      var filtered = caseOfficers.filter(function(value, index, arr) {return value != latestEvidence[7];});
-
-      db.getCaseOfficerDetails(filtered,1).then(officerList => {
-        res.render('pages/investigate',{
-          user_role: req.session.role,
-          name: req.session.name,
-          caseuuid: caseUuid,
-          evidenceuuid: evidenceUuid,
-          officerList: officerList,
-          evidenceName: latestEvidence[1],
-          caseid: req.query.caseId,
-          evidenceid: req.query.evidenceId,
-          pathid : req.query.pathId,
-          investigateDetails: ''
-        });
-      }).catch(err => res.send(handlerError(err)))   
-    }); 
-  });
-});
-
-// Investigate Post Page
-router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
-  try {
-    if (isNaN(Number(req.query.pathId)) || isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
-    var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
-    var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
-    var filePath = req.session.currentEvidencePaths[req.query.pathId];
-    if (!caseUuid || !evidenceUuid || !filePath) throw new Error("Invalid Case/Evidence UUID or File Path");
-  } catch (err) {
-    console.error(err);
-    res.redirect('/dashboard');
-    return;
-  }
-
-  console.log(`Running wireshark on ${filePath} now`);
-  exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      res.redirect('/dashboard');
-    }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      res.redirect('/dashboard');
-    }
-
-    burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
-      var latestEvidence = ret.retEvidence.split('|');  
-      burrow.contract.GetCaseOfficers(caseUuid).then(value => {
-        var caseOfficers = value.allCaseOfficers;
-        var filtered = caseOfficers.filter(function(value, index, arr) {return value != latestEvidence[7];});
-  
-        db.getCaseOfficerDetails(filtered,1).then(officerList => {
-          res.render('pages/investigate',{
-            user_role: req.session.role,
-            name: req.session.name,
-            caseuuid: caseUuid,
-            evidenceuuid: evidenceUuid,
-            officerList: officerList,
-            evidenceName: latestEvidence[1],
-            caseid: req.query.caseId,
-            evidenceid: req.query.evidenceId,
-            pathid : req.query.pathId,
-            investigateDetails: stdout
-          });
-        }).catch(err => res.send(handlerError(err)))   
-      }); 
+      }).catch(err => res.send(handlerError(err)))
     });
-    // console.log(`stdout: ${stdout}`);
   });
 });
+
 
 // Update Ownership Post Page
 router.post('/updateOwnership', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
@@ -701,21 +615,20 @@ router.post('/updateOwnership', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grant
   }
 
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
-    var latestEvidence = ret.retEvidence.split('|');    
-    latestEvidence.unshift(caseUuid);  
+    var latestEvidence = ret.retEvidence.split('|');
+    latestEvidence.unshift(caseUuid);
     latestEvidence[3] = new Date(Date.now()).toISOString().slice(0, 19).replace('T', ' ');
     latestEvidence[4] = "Change Ownership";
     latestEvidence[5] = req.ip.slice(7);
     latestEvidence[7] = '-';
     latestEvidence[8] = req.body.officerName;
     latestEvidence[10] = req.session.uuid;
-   
-    burrow.contract.LogEvidence(latestEvidence).then(ret=>{
+
+    burrow.contract.LogEvidence(latestEvidence).then(ret => {
       res.redirect('/caseInfo/?caseId=' + req.query.caseId);
-    });  
+    });
   });
 });
-
 
 
 // Remove Case
@@ -735,5 +648,94 @@ router.get('/closeCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req
   });
 });
 
+
+// Investigate Page
+router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
+  try {
+    if (isNaN(Number(req.query.pathId)) || isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
+    var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
+    var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
+    var filePath = req.session.currentEvidencePaths[req.query.pathId];
+    if (!caseUuid || !evidenceUuid || !filePath) throw new Error("Invalid Case/Evidence UUID or File Path");
+  } catch (err) {
+    console.error(err);
+    res.redirect('/dashboard');
+    return;
+  }
+
+  burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
+    var latestEvidence = ret.retEvidence.split('|');
+    burrow.contract.GetCaseOfficers(caseUuid).then(value => {
+      var caseOfficers = value.allCaseOfficers;
+      var filtered = caseOfficers.filter(function (value, index, arr) { return value != latestEvidence[7]; });
+
+      db.getCaseOfficerDetails(filtered, 1).then(officerList => {
+        res.render('pages/investigate', {
+          user_role: req.session.role,
+          name: req.session.name,
+          caseuuid: caseUuid,
+          evidenceuuid: evidenceUuid,
+          officerList: officerList,
+          evidenceName: latestEvidence[1],
+          caseid: req.query.caseId,
+          evidenceid: req.query.evidenceId,
+          pathid: req.query.pathId,
+          investigateDetails: ''
+        });
+      }).catch(err => res.send(handlerError(err)))
+    });
+  });
+});
+
+
+// Investigate Post Page
+router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
+  try {
+    if (isNaN(Number(req.query.pathId)) || isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
+    var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
+    var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
+    var filePath = req.session.currentEvidencePaths[req.query.pathId];
+    if (!caseUuid || !evidenceUuid || !filePath) throw new Error("Invalid Case/Evidence UUID or File Path");
+  } catch (err) {
+    console.error(err);
+    res.redirect('/dashboard');
+    return;
+  }
+
+  console.log(`Running wireshark on ${filePath} now...\n`);
+  exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
+    if (error) {
+      console.log(`error: ${error.message}`);
+      res.redirect('/dashboard');
+    }
+    if (stderr) {
+      console.log(`stderr: ${stderr}`);
+      res.redirect('/dashboard');
+    }
+
+    burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
+      var latestEvidence = ret.retEvidence.split('|');
+      burrow.contract.GetCaseOfficers(caseUuid).then(value => {
+        var caseOfficers = value.allCaseOfficers;
+        var filtered = caseOfficers.filter(function (value, index, arr) { return value != latestEvidence[7]; });
+
+        db.getCaseOfficerDetails(filtered, 1).then(officerList => {
+          res.render('pages/investigate', {
+            user_role: req.session.role,
+            name: req.session.name,
+            caseuuid: caseUuid,
+            evidenceuuid: evidenceUuid,
+            officerList: officerList,
+            evidenceName: latestEvidence[1],
+            caseid: req.query.caseId,
+            evidenceid: req.query.evidenceId,
+            pathid: req.query.pathId,
+            investigateDetails: stdout
+          });
+        }).catch(err => res.send(handlerError(err)))
+      });
+    });
+  });
+});
 
 module.exports = router;

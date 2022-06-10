@@ -708,23 +708,31 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   var investigateDetails = '';
 
   //Check for tool to run
-  if(req.body.toolName == "wireshark") {
+  if (req.body.toolName == "wireshark") {
 
     // Runs the Wireshark tool
-    // Note: Mechanism to identify which tool is selected from the website has not been implemented.
     console.log(`Running wireshark on ${filePath} now...\n`);
-    exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
-      if (error) {
-        console.log(`error: ${error.message}`);
-        res.redirect('/dashboard');
-      }
-      if (stderr) {
-        console.log(`stderr: ${stderr}`);
-        res.redirect('/dashboard');
-      }
+
+    // Analysis level selection logic
+    if (req.body.analysisLevel == "simple") {
+      exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
+        if (error) {
+          console.log(`error: ${error.message}`);
+          res.redirect('/dashboard');
+        }
+        if (stderr) {
+          console.log(`stderr: ${stderr}`);
+          res.redirect('/dashboard');
+        }
+        toolName = 'wireshark';
+        investigateDetails = stdout;
+      });
+    } else if (req.body.analysisLevel == "advanced") {
       toolName = 'wireshark';
-      investigateDetails = stdout;
-    });
+      investigateDetails = 'Advanced output to be displayed here...';
+    } else {
+      res.redirect('/dashboard');
+    }
     
   } else if (req.body.toolName == 'test') {
     //Placeholder code, replace with tool execution afterwards

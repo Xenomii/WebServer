@@ -51,6 +51,12 @@
                                 <option value="simple">Simple</option>
                                 <option value="advanced">Advanced</option>
                             </select>
+                            <% if (typeof analysisLevel !=='undefined' ) { %>
+                                <script>
+                                    let analysisLevel = '<%-analysisLevel%>';
+                                    document.getElementById('analysisLevel').value = analysisLevel;
+                                </script>
+                                <% } %>
                     </form>
 
                     <br>

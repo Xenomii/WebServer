@@ -705,6 +705,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   }
   
   var toolName = '';
+  var analysisLevel = '';
   var investigateDetails = '';
 
   //Check for tool to run
@@ -725,10 +726,12 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           res.redirect('/dashboard');
         }
         toolName = 'wireshark';
+        analysisLevel = 'simple';
         investigateDetails = stdout;
       });
     } else if (req.body.analysisLevel == "advanced") {
       toolName = 'wireshark';
+      analysisLevel = 'advanced';
       investigateDetails = 'Advanced output to be displayed here...';
     } else {
       res.redirect('/dashboard');
@@ -760,6 +763,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
           toolName: toolName,
+          analysisLevel: analysisLevel,
           investigateDetails: investigateDetails
         });
       }).catch(err => res.send(handlerError(err)))

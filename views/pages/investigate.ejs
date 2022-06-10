@@ -35,15 +35,15 @@
                                 Tools</label>
                             <select id="toolName" name="toolName" class="form-select"
                                 aria-label="Default select example">
-                                <option value="wireshark">Wireshark</option>
-                                <option value="test">Test</option>
+                                <!--<option value="wireshark">Wireshark</option>
+                                <option value="test">Test</option>-->
                             </select>
                             <% if (typeof toolName !=='undefined' ) { %>
                                 <script>
                                     let toolName = '<%-toolName%>';
                                     document.getElementById('toolName').value = toolName;
                                 </script>
-                                <% } %>
+                            <% } %>
                         <div class="form-group" id="analysis">
                             <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Analysis Level</label>
                             <select id="analysisLevel" name="analysisLevel" class="form-select"
@@ -56,7 +56,7 @@
                                     let analysisLevel = '<%-analysisLevel%>';
                                     document.getElementById('analysisLevel').value = analysisLevel;
                                 </script>
-                                <% } %>
+                            <% } %>
                     </form>
 
                     <br>
@@ -72,6 +72,20 @@
     <footer>
         <%- include('../partials/footer'); %>
     </footer>
+    
+    <!--Programmatically populate options of select element for list of tools-->
+    <script>
+        let tools = '<%-toolList%>'.split(",");
+        var select = document.getElementById("toolName");
+        
+        for (var i = 0; i < tools.length; i++) {
+            var optionElement = document.createElement("option");
+            optionElement.textContent = tools[i].charAt(0).toUpperCase() + tools[i].slice(1);
+            optionElement.value = tools[i];
+            select.appendChild(optionElement);
+        }
+    </script>
+    
     <script>
         $(document).ready(function () {
 
@@ -91,6 +105,7 @@
             });
         });
     </script>
+    
     <script>
         var dateEl = document.getElementById('date');
         var timeEl = document.getElementById('time');

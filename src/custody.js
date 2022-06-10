@@ -389,7 +389,9 @@ router.post('/addEvidence', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   const form = formidable(fileStore.formidableSettings);
   form.parse(req, (err, fields, files) => {
     if (err) {
-      next(err);
+      //next(err);
+      console.log(err);
+      res.redirect('/caseInfo/?caseId=' + req.query.caseId);
       return;
     }
 
@@ -663,6 +665,8 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
     res.redirect('/dashboard');
     return;
   }
+  
+  var toolList = ["wireshark","volatility","test"];
 
   // Not sure if all of this information is needed to just display the page.
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
@@ -682,6 +686,7 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
           caseid: req.query.caseId,
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
+          toolList: toolList,
           investigateDetails: ''
         });
       }).catch(err => res.send(handlerError(err)))
@@ -703,6 +708,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     res.redirect('/dashboard');
     return;
   }
+  
+  var toolList = ["wireshark","volatility","test"];
   
   var toolName = '';
   var analysisLevel = '';
@@ -737,6 +744,11 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       res.redirect('/dashboard');
     }
     
+  } else if (req.body.toolName == 'volatility') { 
+    //Placeholder code, replace with tool execution afterwards
+    console.log('Volatility test\n');
+    toolName = 'volatility';
+    investigateDetails = 'Placeholder text for results after executing tool';
   } else if (req.body.toolName == 'test') {
     //Placeholder code, replace with tool execution afterwards
     console.log('TEST\n');
@@ -762,6 +774,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           caseid: req.query.caseId,
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
+          toolList: toolList,
           toolName: toolName,
           analysisLevel: analysisLevel,
           investigateDetails: investigateDetails

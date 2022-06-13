@@ -737,9 +737,19 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         investigateDetails = stdout;
       });
     } else if (req.body.analysisLevel == "advanced") {
-      toolName = 'wireshark';
-      analysisLevel = 'advanced';
-      investigateDetails = 'Advanced output to be displayed here...';
+      exec(`tshark -r ${filePath} -q -z ip_hosts,tree`, (error, stdout, stderr) => {
+        if (error) {
+          console.log(`error: ${error.message}`);
+          res.redirect('/dashboard');
+        }
+        if (stderr) {
+          console.log(`stderr: ${stderr}`);
+          res.redirect('/dashboard');
+        }
+        toolName = 'wireshark';
+        analysisLevel = 'advanced';
+        investigateDetails = stdout;
+      })
     } else {
       res.redirect('/dashboard');
     }

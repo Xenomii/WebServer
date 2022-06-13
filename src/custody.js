@@ -650,6 +650,27 @@ router.get('/closeCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req
   });
 });
 
+const toolList = [
+  {
+    id: 0,
+    "name": "Wireshark"
+  },
+  {
+    id: 1,
+    "name": "Volatility"
+  }
+]
+
+const analysisList = [
+  {
+    id: 0,
+    "name": "Simple"
+  },
+  {
+    id: 1,
+    "name": "Advanced"
+  }
+]
 
 // Investigate Page
 router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
@@ -665,8 +686,6 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
     res.redirect('/dashboard');
     return;
   }
-  
-  var toolList = ["wireshark","volatility","test"];
 
   // Not sure if all of this information is needed to just display the page.
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
@@ -687,6 +706,7 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
           toolList: toolList,
+          analysisList: analysisList,
           investigateDetails: ''
         });
       }).catch(err => res.send(handlerError(err)))
@@ -709,20 +729,16 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     return;
   }
   
-  var toolList = ["wireshark","volatility","test"];
-  
-  var toolName = '';
-  var analysisLevel = '';
   var investigateDetails = '';
 
-  //Check for tool to run
-  if (req.body.toolName == "wireshark") {
+  // Check for tool to run
+  if (req.body.toolName == 0) {
 
     // Runs the Wireshark tool
     console.log(`Running wireshark on ${filePath} now...\n`);
 
     // Analysis level selection logic
-    if (req.body.analysisLevel == "simple") {
+    if (req.body.analysisName == 0) {
       exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
         if (error) {
           console.log(`error: ${error.message}`);
@@ -732,11 +748,9 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           console.log(`stderr: ${stderr}`);
           res.redirect('/dashboard');
         }
-        toolName = 'wireshark';
-        analysisLevel = 'simple';
         investigateDetails = stdout;
       });
-    } else if (req.body.analysisLevel == "advanced") {
+    } else if (req.body.analysisName == 1) {
       exec(`tshark -r ${filePath} -q -z ip_hosts,tree`, (error, stdout, stderr) => {
         if (error) {
           console.log(`error: ${error.message}`);
@@ -746,23 +760,15 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           console.log(`stderr: ${stderr}`);
           res.redirect('/dashboard');
         }
-        toolName = 'wireshark';
-        analysisLevel = 'advanced';
         investigateDetails = stdout;
       })
     } else {
       res.redirect('/dashboard');
     }
     
-  } else if (req.body.toolName == 'volatility') { 
+  } else if (req.body.toolName == 1) { 
     //Placeholder code, replace with tool execution afterwards
     console.log('Volatility test\n');
-    toolName = 'volatility';
-    investigateDetails = 'Placeholder text for results after executing tool';
-  } else if (req.body.toolName == 'test') {
-    //Placeholder code, replace with tool execution afterwards
-    console.log('TEST\n');
-    toolName = 'test';
     investigateDetails = 'Placeholder text for results after executing tool';
   };
   
@@ -785,8 +791,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
           toolList: toolList,
-          toolName: toolName,
-          analysisLevel: analysisLevel,
+          analysisList: analysisList,
           investigateDetails: investigateDetails
         });
       }).catch(err => res.send(handlerError(err)))

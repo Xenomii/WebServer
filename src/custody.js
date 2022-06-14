@@ -751,7 +751,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         investigateDetails = stdout;
       });
     } else if (req.body.analysisName == 1) {
-      exec(`tshark -r ${filePath} -q -z ip_hosts,tree`, (error, stdout, stderr) => {
+      exec(`tshark -r ${filePath} -V`, (error, stdout, stderr) => {
         if (error) {
           console.log(`error: ${error.message}`);
           res.redirect('/dashboard');

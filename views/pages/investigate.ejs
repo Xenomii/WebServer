@@ -34,7 +34,12 @@
                             <option value= <%= toolList[i].id %>> <%= toolList[i].name %></option> 
                             <% } %>
                     </select>
-
+                    <% if (typeof toolName !=='undefined' ) { %>
+                        <script>
+                            let toolName = '<%-toolName%>';
+                            document.getElementById('toolName').value = toolName;
+                        </script>
+                    <% } %>
                 <div class="form-group">
                     <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Analysis Level</label>
                     <select id="analysisName" name="analysisName" class="form-select" aria-label="Default select example">

@@ -794,6 +794,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           pathid: req.query.pathId,
           toolList: toolList,
           analysisList: analysisList,
+          toolName: req.body.toolName,
           investigateDetails: investigateDetails
         });
       }).catch(err => res.send(handlerError(err)))

@@ -734,12 +734,13 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   // Check for tool to run
   if (req.body.toolName == 0) {
 
-    // Runs the Wireshark tool
-    console.log(`Running wireshark on ${filePath} now...\n`);
-
-    // Analysis level selection logic
+    /*
+    Analysis level selection logic
+      - exec will run the tool and the output can be obtained from stdout (should be modified to use docker instead)
+    */
     if (req.body.analysisName == 0) {
-      exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
+      console.log(`[Simple] Running wireshark on ${filePath} now...\n`);
+      exec(`tshark -r ${filePath} -T fields -E header=y -e ip.src -e ip.dst -e ip.proto -e udp.dstport -e ip.len`, (error, stdout, stderr) => {
         if (error) {
           console.log(`error: ${error.message}`);
           res.redirect('/dashboard');
@@ -751,6 +752,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         investigateDetails = stdout;
       });
     } else if (req.body.analysisName == 1) {
+      console.log(`[Advanced] Running wireshark on ${filePath} now...\n`);
       exec(`tshark -r ${filePath} -V`, (error, stdout, stderr) => {
         if (error) {
           console.log(`error: ${error.message}`);

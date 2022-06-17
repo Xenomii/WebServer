@@ -9,8 +9,8 @@ const burrow = require('./services/burrow.js');
 const fileStore = require('./services/fileStore.js');
 const { promiseImpl } = require('ejs');
 const { exec } = require('child_process');
-const { stdout } = require('process');
-const { stderr } = require('process');
+var Docker = require('dockerode');
+const { stream } = require('@hyperledger/burrow/dist/events.js');
 
 const router = express.Router();
 
@@ -728,7 +728,25 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     res.redirect('/dashboard');
     return;
   }
-  
+
+  var docker = new Docker();
+  var container = docker.getContainer('admiring_nightingale');
+  let params = {
+    Cmd: ['wireshark', '-v'],
+    AttachStdout: true,
+    AttachStderr: true
+  };
+  container.exec(params, function(err, exec) {
+    if(err) return;
+    exec.start(function(err, stream){
+      if(err) {
+        console.log("error start: " + err);
+        return;
+      }
+      container.modem.demuxStream(stream, process.stdout, process.stderr);
+    });
+  });
+
   var investigateDetails = '';
 
   // Check for tool to run
@@ -767,13 +785,13 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     } else {
       res.redirect('/dashboard');
     }
-    
-  } else if (req.body.toolName == 1) { 
+
+  } else if (req.body.toolName == 1) {
     //Placeholder code, replace with tool execution afterwards
     console.log('Volatility test\n');
     investigateDetails = 'Placeholder text for results after executing tool';
   };
-  
+
   // This information might be useful to record the investigative action onto the blockchain
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');
@@ -800,7 +818,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       }).catch(err => res.send(handlerError(err)))
     });
   });
- 
+
 });
 
 module.exports = router;

@@ -729,13 +729,18 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     return;
   }
 
+  // Instantiate dockerode
   var docker = new Docker();
+  // Obtain docker container using container name (can use id as well but it is unique so it will cause problems when merging)
   var container = docker.getContainer('admiring_nightingale');
+  // Specify options needed to run a command on the container
+  // For now, can run commands that display output to console (need to figure out how to run a command on a file that is on the host machine and not the docker)
   let params = {
     Cmd: ['wireshark', '-v'],
     AttachStdout: true,
     AttachStderr: true
   };
+  // Run docker container exec
   container.exec(params, function(err, exec) {
     if(err) return;
     exec.start(function(err, stream){
@@ -743,6 +748,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         console.log("error start: " + err);
         return;
       }
+      // Streams the output onto the console using process.stdout (how to store this output? idk *shrug*)
       container.modem.demuxStream(stream, process.stdout, process.stderr);
     });
   });

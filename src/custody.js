@@ -10,7 +10,6 @@ const fileStore = require('./services/fileStore.js');
 const { promiseImpl } = require('ejs');
 const { exec } = require('child_process');
 var Docker = require('dockerode');
-const { stream } = require('@hyperledger/burrow/dist/events.js');
 
 const router = express.Router();
 
@@ -732,24 +731,29 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   // Instantiate dockerode
   var docker = new Docker();
   // Obtain docker container using container name (can use id as well but it is unique so it will cause problems when merging)
-  var container = docker.getContainer('admiring_nightingale');
+  var container = docker.getContainer('recursing_volhard');
   // Specify options needed to run a command on the container
   // For now, can run commands that display output to console (need to figure out how to run a command on a file that is on the host machine and not the docker)
   let params = {
-    Cmd: ['wireshark', '-v'],
+    Cmd: ['tshark', '-r', `${filePath}`, '-V'],
     AttachStdout: true,
     AttachStderr: true
   };
+  container_output = "";
   // Run docker container exec
   container.exec(params, function(err, exec) {
     if(err) return;
-    exec.start(function(err, stream){
+    exec.start({ hijack: true, stdin: false }, function(err, stream){
       if(err) {
         console.log("error start: " + err);
         return;
       }
+      // One way of "storing" the output into a variable
+      stream.setEncoding('utf8');
+      container_output = (stream.pipe(process.stdout));
+      console.log('Output: ', container_output);
       // Streams the output onto the console using process.stdout (how to store this output? idk *shrug*)
-      container.modem.demuxStream(stream, process.stdout, process.stderr);
+      // container.modem.demuxStream(stream, process.stdout, process.stderr);
     });
   });
 

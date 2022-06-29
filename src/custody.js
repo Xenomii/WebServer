@@ -9,7 +9,7 @@ const burrow = require('./services/burrow.js');
 const fileStore = require('./services/fileStore.js');
 const { promiseImpl } = require('ejs');
 const { exec } = require('child_process');
-var Docker = require('dockerode');
+var Docker = require('simple-dockerode');
 
 const router = express.Router();
 
@@ -732,32 +732,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   var docker = new Docker();
   // Obtain docker container using container name (can use id as well but it is unique so it will cause problems when merging)
   var container = docker.getContainer('recursing_volhard');
-  // Specify options needed to run a command on the container
-  // For now, can run commands that display output to console (need to figure out how to run a command on a file that is on the host machine and not the docker)
-  let params = {
-    Cmd: ['tshark', '-r', `${filePath}`, '-V'],
-    AttachStdout: true,
-    AttachStderr: true
-  };
-  container_output = "";
-  // Run docker container exec
-  container.exec(params, function(err, exec) {
-    if(err) return;
-    exec.start({ hijack: true, stdin: false }, function(err, stream){
-      if(err) {
-        console.log("error start: " + err);
-        return;
-      }
-      // One way of "storing" the output into a variable
-      stream.setEncoding('utf8');
-      container_output = (stream.pipe(process.stdout));
-      console.log('Output: ', container_output);
-      // Streams the output onto the console using process.stdout (how to store this output? idk *shrug*)
-      // container.modem.demuxStream(stream, process.stdout, process.stderr);
-    });
-  });
-
   var investigateDetails = '';
+  container_output = '';
 
   // Check for tool to run
   if (req.body.toolName == 0) {
@@ -768,30 +744,31 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     */
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running wireshark on ${filePath} now...\n`);
-      exec(`tshark -r ${filePath} -T fields -E header=y -e ip.src -e ip.dst -e ip.proto -e udp.dstport -e ip.len`, (error, stdout, stderr) => {
-        if (error) {
-          console.log(`error: ${error.message}`);
-          res.redirect('/dashboard');
-        }
-        if (stderr) {
-          console.log(`stderr: ${stderr}`);
-          res.redirect('/dashboard');
-        }
-        investigateDetails = stdout;
-      });
+      container.exec(
+        ['tshark', '-r', `${filePath}`, '-T', 'fields', '-E' , 'header=y', '-e', 'ip.src', '-e', 'ip.dst', '-e', 'ip.proto', '-e', 'udp.dstport' ,'-e', 'ip.len'],
+        {stdout: true, stderr: true})
+        .catch(console.error)
+        .then(results => {
+          // If the file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        });
     } else if (req.body.analysisName == 1) {
       console.log(`[Advanced] Running wireshark on ${filePath} now...\n`);
-      exec(`tshark -r ${filePath} -V`, (error, stdout, stderr) => {
-        if (error) {
-          console.log(`error: ${error.message}`);
-          res.redirect('/dashboard');
-        }
-        if (stderr) {
-          console.log(`stderr: ${stderr}`);
-          res.redirect('/dashboard');
-        }
-        investigateDetails = stdout;
-      })
+      container.exec(
+        ['tshark', '-r', `${filePath}`, '-V'],
+        {stdout: true, stderr: true})
+        .catch(console.error)
+        .then(results => {
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        });
     } else {
       res.redirect('/dashboard');
     }

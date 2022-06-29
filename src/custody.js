@@ -733,11 +733,9 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   // Obtain docker container using container name (can use id as well but it is unique so it will cause problems when merging)
   var container = docker.getContainer('recursing_volhard');
   var investigateDetails = '';
-  container_output = '';
 
   // Check for tool to run
   if (req.body.toolName == 0) {
-
     /*
     Analysis level selection logic
       - exec will run the tool and the output can be obtained from stdout (should be modified to use docker instead)
@@ -745,9 +743,10 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running wireshark on ${filePath} now...\n`);
       container.exec(
-        ['tshark', '-r', `${filePath}`, '-T', 'fields', '-E' , 'header=y', '-e', 'ip.src', '-e', 'ip.dst', '-e', 'ip.proto', '-e', 'udp.dstport' ,'-e', 'ip.len'],
-        {stdout: true, stderr: true})
+        ['tshark', '-r', `${filePath}`, '-T', 'fields', '-E', 'header=y', '-e', 'ip.src', '-e', 'ip.dst', '-e', 'ip.proto', '-e', 'udp.dstport', '-e', 'ip.len'],
+        { stdout: true, stderr: true })
         .catch(console.error)
+        // This is possible through the use of the simple-dockerode module
         .then(results => {
           // If the file does not exist, output the error (highly unlikely that this will occur)
           if (results.inspect.ExitCode !== 0) {
@@ -760,7 +759,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       console.log(`[Advanced] Running wireshark on ${filePath} now...\n`);
       container.exec(
         ['tshark', '-r', `${filePath}`, '-V'],
-        {stdout: true, stderr: true})
+        { stdout: true, stderr: true })
         .catch(console.error)
         .then(results => {
           if (results.inspect.ExitCode !== 0) {

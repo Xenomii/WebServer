@@ -767,17 +767,39 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           } else {
             investigateDetails = results.stdout;
           }
-        });
+        }).then(results => {
+          render(req, res, investigateDetails);
+      });
     } else {
       res.redirect('/dashboard');
     }
 
   } else if (req.body.toolName == 1) {
-    //Placeholder code, replace with tool execution afterwards
-    console.log('Volatility test\n');
-    investigateDetails = 'Placeholder text for results after executing tool';
+    console.log(`[Simple] Running volatility on ${filePath} now...\n`);
+    let promise = container.exec(
+      ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'info.Info'],
+      { stdout: true, stderr: true })
+      .catch(console.error)
+      .then(results => {
+        //If the file does not exist, output the error (highly unlikely that this will occur)
+        if (results.inspect.ExitCode !== 0) {
+          investigateDetails = results.stderr;
+        } else {
+          investigateDetails = results.stdout;
+        }
+      }).then(results => {
+        render(req, res, investigateDetails);
+    });
   };
 
+});
+
+//Function to render page after running tools on evidence
+function render(req, res, investigateDetails) {
+  var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
+  var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
+  var filePath = req.session.currentEvidencePaths[req.query.pathId];
+  
   // This information might be useful to record the investigative action onto the blockchain
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');
@@ -804,7 +826,6 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       }).catch(err => res.send(handlerError(err)))
     });
   });
-
-});
+};
 
 module.exports = router;

@@ -775,21 +775,63 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     }
 
   } else if (req.body.toolName == 1) {
-    console.log(`[Simple] Running volatility on ${filePath} now...\n`);
-    let promise = container.exec(
-      ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'info.Info'],
-      { stdout: true, stderr: true })
-      .catch(console.error)
-      .then(results => {
-        //If the file does not exist, output the error (highly unlikely that this will occur)
-        if (results.inspect.ExitCode !== 0) {
-          investigateDetails = results.stderr;
-        } else {
-          investigateDetails = results.stdout;
-        }
-      }).then(results => {
-        render(req, res, investigateDetails);
-    });
+    if (req.body.analysisName == 0) {
+      console.log(`[Simple] Running volatility on ${filePath} now...\n`);
+      container.exec(
+        ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'banners'],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        .then(results => {
+          // If the file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = "----------------------------------------BANNER DETECTION----------------------------------------\n"
+            investigateDetails = investigateDetails+results.stdout;
+          }
+        }).then(results => {
+          // Execute info.Info plugin after identifying banners
+          container.exec(
+            ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'info.Info'],
+            { stdout: true, stderr: true })
+            .catch(console.error)
+            .then(results => {
+            investigateDetails = investigateDetails + "----------------------------------------info.Info RESULTS----------------------------------------\n";
+            // Exit code 2 means file does not exist, output the error (highly unlikely that this will occur)
+            if (results.inspect.ExitCode === 2) {
+            investigateDetails = investigateDetails + results.stderr;
+            // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
+            } else if (results.inspect.ExitCode === 1) {
+              investigateDetails = investigateDetails + "ERROR - Operating system of memory file is not supported, unable to perform analysis"
+            } else {
+              investigateDetails = investigateDetails + results.stdout;
+            }
+              }).then(results => {
+                render(req, res, investigateDetails);
+              });
+        });
+    } else if (req.body.analysisName == 1) { 
+      console.log(`[Advanced] Running volatility on ${filePath} now...\n`);
+      container.exec(
+        ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'windows.pslist.PsList'],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        .then(results => {
+          // Exit code 2 means file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode === 2) {
+          investigateDetails = investigateDetails + results.stderr;
+          // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
+          } else if (results.inspect.ExitCode === 1) {
+            investigateDetails = "ERROR - Operating system of memory file is not supported, unable to perform analysis"
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
+        });
+    } else {
+      res.redirect('/dashboard');
+    }
   };
 
 });

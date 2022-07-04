@@ -7,9 +7,7 @@ const db = require('./services/database.js');
 const dbfs = require('./services/databaseFileStore.js');
 const burrow = require('./services/burrow.js');
 const fileStore = require('./services/fileStore.js');
-const { promiseImpl } = require('ejs');
-const { exec } = require('child_process');
-var Docker = require('simple-dockerode');
+const Docker = require('./services/docker.js');
 
 const router = express.Router();
 
@@ -649,35 +647,28 @@ router.get('/closeCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req
   });
 });
 
+// List of forensic tools that will be displayed on the web app
 const toolList = [
-  {
-    id: 0,
-    "name": "Wireshark"
-  },
-  {
-    id: 1,
-    "name": "Volatility"
-  }
+  { id: 0, "name": "Wireshark" },
+  { id: 1, "name": "Volatility" }
 ]
 
+// List of analysis levels that determines the complexity of the command used and output displayed by the forensic tool
 const analysisList = [
-  {
-    id: 0,
-    "name": "Simple"
-  },
-  {
-    id: 1,
-    "name": "Advanced"
-  }
+  { id: 0, "name": "Simple" },
+  { id: 1, "name": "Advanced" }
 ]
 
 // Investigate Page
 router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
   try {
+    // Each of these variables must be present in the HTTP GET request URL (i.e., look at your URL address bar)
     if (isNaN(Number(req.query.pathId)) || isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
+    // Corresponds to the case that you click on the dashboard page
     var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
+    // Each case can have many evidences
     var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
-    // This specifies where the file is stored
+    // This specifies where the file (i.e. evidence) is stored
     var filePath = req.session.currentEvidencePaths[req.query.pathId];
     if (!caseUuid || !evidenceUuid || !filePath) throw new Error("Invalid Case/Evidence UUID or File Path");
   } catch (err) {
@@ -686,7 +677,6 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
     return;
   }
 
-  // Not sure if all of this information is needed to just display the page.
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');
     burrow.contract.GetCaseOfficers(caseUuid).then(value => {
@@ -728,10 +718,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     return;
   }
 
-  // Instantiate dockerode
-  var docker = new Docker();
-  // Obtain docker container using container name (can use id as well but it is unique so it will cause problems when merging)
-  var container = docker.getContainer('recursing_volhard');
+  // Imported from docker.js
+  var container = Docker.container;
   var investigateDetails = '';
 
   // Check for tool to run

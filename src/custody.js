@@ -754,6 +754,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           } else {
             investigateDetails = results.stdout;
           }
+        }).then(results => {
+          render(req, res, investigateDetails);
         });
     } else if (req.body.analysisName == 1) {
       console.log(`[Advanced] Running wireshark on ${filePath} now...\n`);

@@ -8,6 +8,7 @@ const dbfs = require('./services/databaseFileStore.js');
 const burrow = require('./services/burrow.js');
 const fileStore = require('./services/fileStore.js');
 const Docker = require('./services/docker.js');
+const path = require('path');
 
 const router = express.Router();
 
@@ -722,9 +723,15 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   // Imported from docker.js
   var container = Docker.container;
   var investigateDetails = '';
+  var extMessage = 'This tool does not support this file type!';
 
   // Check for tool to run
   if (req.body.toolName == 0) {
+    if (path.extname(filePath) != '.cap' || path.extname(filePath) != '.pcap') {
+      investigateDetails = extMessage;
+      // Return is needed here to fully finish the response (i.e. force the app to end here and not continue further)
+      return render(req, res, investigateDetails);
+    }
     /*
     Analysis level selection logic
       - exec will run the tool and the output can be obtained from stdout (should be modified to use docker instead)

@@ -724,18 +724,18 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   var container = Docker.container;
   var investigateDetails = '';
   var extMessage = 'This tool does not support this file type!';
+  console.log(path.extname(filePath));
 
-  // Check for tool to run
+  // Check for which tool to run
+  // === Wireshark ===
   if (req.body.toolName == 0) {
-    if (path.extname(filePath) != '.cap' || path.extname(filePath) != '.pcap') {
+    // Check file extension
+    if (path.extname(filePath) !== '.cap' && path.extname(filePath) !== '.pcap') {
       investigateDetails = extMessage;
       // Return is needed here to fully finish the response (i.e. force the app to end here and not continue further)
       return render(req, res, investigateDetails);
     }
-    /*
-    Analysis level selection logic
-      - exec will run the tool and the output can be obtained from stdout (should be modified to use docker instead)
-    */
+    // Determine which analysis level was selected (0 = Simple, 1 = Advanced)
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running wireshark on ${filePath} now...\n`);
       container.exec(
@@ -767,12 +767,16 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           }
         }).then(results => {
           render(req, res, investigateDetails);
-      });
+        });
     } else {
       res.redirect('/dashboard');
     }
-
+  // === Volatility3 ===
   } else if (req.body.toolName == 1) {
+    if (path.extname(filePath) !== '.vmem') {
+      investigateDetails = extMessage;
+      return render(req, res, investigateDetails);
+    }
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running volatility on ${filePath} now...\n`);
       container.exec(
@@ -785,7 +789,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
             investigateDetails = results.stderr;
           } else {
             investigateDetails = "----------------------------------------BANNER DETECTION----------------------------------------\n"
-            investigateDetails = investigateDetails+results.stdout;
+            investigateDetails = investigateDetails + results.stdout;
           }
         }).then(results => {
           // Execute info.Info plugin after identifying banners
@@ -794,21 +798,21 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
             { stdout: true, stderr: true })
             .catch(console.error)
             .then(results => {
-            investigateDetails = investigateDetails + "----------------------------------------info.Info RESULTS----------------------------------------\n";
-            // Exit code 2 means file does not exist, output the error (highly unlikely that this will occur)
-            if (results.inspect.ExitCode === 2) {
-            investigateDetails = investigateDetails + results.stderr;
-            // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
-            } else if (results.inspect.ExitCode === 1) {
-              investigateDetails = investigateDetails + "ERROR - Operating system of memory file is not supported, unable to perform analysis"
-            } else {
-              investigateDetails = investigateDetails + results.stdout;
-            }
-              }).then(results => {
-                render(req, res, investigateDetails);
-              });
+              investigateDetails = investigateDetails + "----------------------------------------info.Info RESULTS----------------------------------------\n";
+              // Exit code 2 means file does not exist, output the error (highly unlikely that this will occur)
+              if (results.inspect.ExitCode === 2) {
+                investigateDetails = investigateDetails + results.stderr;
+                // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
+              } else if (results.inspect.ExitCode === 1) {
+                investigateDetails = investigateDetails + "ERROR - Operating system of memory file is not supported, unable to perform analysis"
+              } else {
+                investigateDetails = investigateDetails + results.stdout;
+              }
+            }).then(results => {
+              render(req, res, investigateDetails);
+            });
         });
-    } else if (req.body.analysisName == 1) { 
+    } else if (req.body.analysisName == 1) {
       console.log(`[Advanced] Running volatility on ${filePath} now...\n`);
       container.exec(
         ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'windows.pslist.PsList'],
@@ -817,8 +821,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         .then(results => {
           // Exit code 2 means file does not exist, output the error (highly unlikely that this will occur)
           if (results.inspect.ExitCode === 2) {
-          investigateDetails = investigateDetails + results.stderr;
-          // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
+            investigateDetails = investigateDetails + results.stderr;
+            // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
           } else if (results.inspect.ExitCode === 1) {
             investigateDetails = "ERROR - Operating system of memory file is not supported, unable to perform analysis"
           } else {
@@ -830,49 +834,49 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     } else {
       res.redirect('/dashboard');
     }
-
-   } else if (req.body.toolName == 2) {
-      /*
-      Analysis level selection logic
-        - exec will run the tool and the output can be obtained from stdout (should be modified to use docker instead)
-      */
-      if (req.body.analysisName == 0) {
-        console.log(`[Simple] Running Binwalk on ${filePath} now...\n`);
-        container.exec(
-          ['binwalk', '-r', `${filePath}`],
-          { stdout: true, stderr: true })
-          .catch(console.error)
-          // This is possible through the use of the simple-dockerode module
-          .then(results => {
-            // If the file does not exist, output the error (highly unlikely that this will occur)
-            if (results.inspect.ExitCode !== 0) {
-              investigateDetails = results.stderr;
-            } else {
-              investigateDetails = results.stdout;
-            }
-          }).then(results => {
-            render(req, res, investigateDetails);
-          });
-      } else if (req.body.analysisName == 1) {
-        console.log(`[Advanced] Running Binwalk on ${filePath} now...\n`);
-        container.exec(
-          ['binwalk', '-b', `${filePath}`],
-          { stdout: true, stderr: true })
-          .catch(console.error)
-          .then(results => {
-            if (results.inspect.ExitCode !== 0) {
-              investigateDetails = results.stderr;
-            } else {
-              investigateDetails = results.stdout;
-            }
-          }).then(results => {
-            render(req, res, investigateDetails);
+  // === Binwalk ===
+  } else if (req.body.toolName == 2) {
+    if (path.extname(filePath) !== '.jpg' && path.extname(filePath) !== '.png') {
+      investigateDetails = extMessage;
+      return render(req, res, investigateDetails);
+    }
+    if (req.body.analysisName == 0) {
+      console.log(`[Simple] Running Binwalk on ${filePath} now...\n`);
+      container.exec(
+        ['binwalk', '-r', `${filePath}`],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        // This is possible through the use of the simple-dockerode module
+        .then(results => {
+          // If the file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
         });
-      } else {
-        res.redirect('/dashboard');
-      }
+    } else if (req.body.analysisName == 1) {
+      console.log(`[Advanced] Running Binwalk on ${filePath} now...\n`);
+      container.exec(
+        ['binwalk', '-b', `${filePath}`],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        .then(results => {
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
+        });
+    } else {
+      res.redirect('/dashboard');
+    }
   };
-  
+
 
 });
 
@@ -881,7 +885,7 @@ function render(req, res, investigateDetails) {
   var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
   var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
   var filePath = req.session.currentEvidencePaths[req.query.pathId];
-  
+
   // This information might be useful to record the investigative action onto the blockchain
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');

@@ -772,7 +772,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     } else {
       res.redirect('/dashboard');
     }
-  // === Volatility3 ===
+    // === Volatility3 ===
   } else if (req.body.toolName == 1) {
     if (path.extname(filePath) !== '.vmem') {
       investigateDetails = extMessage;
@@ -835,12 +835,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     } else {
       res.redirect('/dashboard');
     }
-  // === Binwalk ===
+    // === Binwalk ===
   } else if (req.body.toolName == 2) {
-    if (path.extname(filePath) !== '.jpg' && path.extname(filePath) !== '.png') {
-      investigateDetails = extMessage;
-      return render(req, res, investigateDetails);
-    }
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running Binwalk on ${filePath} now...\n`);
       media_container.exec(

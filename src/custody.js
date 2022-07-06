@@ -721,10 +721,11 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   }
 
   // Imported from docker.js
-  var container = Docker.container;
+  var network_container = Docker.container_list[0];
+  var memory_container = Docker.container_list[1];
+  var media_container = Docker.container_list[2];
   var investigateDetails = '';
   var extMessage = 'This tool does not support this file type!';
-  console.log(path.extname(filePath));
 
   // Check for which tool to run
   // === Wireshark ===
@@ -738,7 +739,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     // Determine which analysis level was selected (0 = Simple, 1 = Advanced)
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running wireshark on ${filePath} now...\n`);
-      container.exec(
+      network_container.exec(
         ['tshark', '-r', `${filePath}`, '-T', 'fields', '-E', 'header=y', '-e', 'ip.src', '-e', 'ip.dst', '-e', 'ip.proto', '-e', 'udp.dstport', '-e', 'ip.len'],
         { stdout: true, stderr: true })
         .catch(console.error)
@@ -755,7 +756,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         });
     } else if (req.body.analysisName == 1) {
       console.log(`[Advanced] Running wireshark on ${filePath} now...\n`);
-      container.exec(
+      network_container.exec(
         ['tshark', '-r', `${filePath}`, '-V'],
         { stdout: true, stderr: true })
         .catch(console.error)
@@ -779,7 +780,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     }
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running volatility on ${filePath} now...\n`);
-      container.exec(
+      memory_container.exec(
         ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'banners'],
         { stdout: true, stderr: true })
         .catch(console.error)
@@ -793,7 +794,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           }
         }).then(results => {
           // Execute info.Info plugin after identifying banners
-          container.exec(
+          memory_container.exec(
             ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'info.Info'],
             { stdout: true, stderr: true })
             .catch(console.error)
@@ -814,7 +815,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         });
     } else if (req.body.analysisName == 1) {
       console.log(`[Advanced] Running volatility on ${filePath} now...\n`);
-      container.exec(
+      memory_container.exec(
         ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'windows.pslist.PsList'],
         { stdout: true, stderr: true })
         .catch(console.error)
@@ -842,7 +843,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     }
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running Binwalk on ${filePath} now...\n`);
-      container.exec(
+      media_container.exec(
         ['binwalk', '-r', `${filePath}`],
         { stdout: true, stderr: true })
         .catch(console.error)
@@ -859,7 +860,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         });
     } else if (req.body.analysisName == 1) {
       console.log(`[Advanced] Running Binwalk on ${filePath} now...\n`);
-      container.exec(
+      media_container.exec(
         ['binwalk', '-b', `${filePath}`],
         { stdout: true, stderr: true })
         .catch(console.error)

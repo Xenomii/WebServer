@@ -2,17 +2,30 @@ const Docker = require('simple-dockerode');
 
 // Instantiate simple-dockerode
 var docker = new Docker();
-// Name of the docker container that contains the forensic tools
-var container_name = 'recursing_volhard';
-// Acquires the docker container
-var container = docker.getContainer(container_name);
+// Docker container names that contains the forensic tools
+var container_names = [ 'itp_network', 'itp_memory', 'itp_media' ];
+// Array to hold on to the Dockerode.Container objects
+var container_list = [];
+for (let i = 0; i < container_names.length; i++) {
+    // Acquires the Container object based on the docker container names
+    var container = docker.getContainer(container_names[i]);
+    // Populates the list with the Container objects
+    container_list.push(container);
+}
 
-// Checks whether the web application can connect to the docker container
-container.inspect(container_name, function (err, data) {
-    if (err) {
-        console.log('ERROR: DOCKER IS NOT CONNECTED!');
-    } else {
-        console.log('Docker Container Connection OK');
-    }
-})
-exports.container = container;
+// Checks whether the container exists and is running
+for (let x = 0; x < container_list.length; x++) {
+    var container = container_list[x];
+    container.inspect(function(err, data){
+        if (err) {
+            console.log(`ERROR! DOCKER CONTAINER ${container_names[x]} IS NOT CONNECTED!`);
+        } else {
+            console.log(`Docker Container ${container_names[x]} Connection OK`);
+        }
+    })
+}
+
+// For debugging purposes...
+// container_list.forEach(container => console.log(container));
+
+exports.container_list = container_list;

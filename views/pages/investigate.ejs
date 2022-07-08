@@ -31,16 +31,19 @@
                     <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Tool Name</label>
                     <select id="toolName" name="toolName" class="form-select" aria-label="Default select example">
                         <optgroup label="Network" class="network">
-                                <option value="0">Wireshark</option>
-                                <option value=inputid">Test</option>
-                                <option value="inputid">Tool 1</option>
+                            <% for(var i=0; i < networkToolList.length; i++) { %>
+                                <option value= <%= networkToolList[i].id %>> <%= networkToolList[i].name %></option> 
+                            <% } %>
                         </optgroup>
                         <optgroup label="Memory" class="memory">
-                                <option value="1">Volatility</option>
+                            <% for(var i=0; i < memoryToolList.length; i++) { %>
+                                <option value= <%= memoryToolList[i].id %>> <%= memoryToolList[i].name %></option> 
+                            <% } %>
                         </optgroup>
                         <optgroup label="Executable" class="executable">
-                                <option value="2">Binwalk</option>
-                                <option value="inputid">Tool 2</option>
+                            <% for(var i=0; i < executableToolList.length; i++) { %>
+                                <option value= <%= executableToolList[i].id %>> <%= executableToolList[i].name %></option> 
+                            <% } %>
                         </optgroup>
                     </select>
                     <% if (typeof toolName !=='undefined' ) { %>

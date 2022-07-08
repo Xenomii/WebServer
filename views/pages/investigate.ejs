@@ -6,6 +6,8 @@
     <%- include('../partials/head'); %>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
     <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
              
 </head>
 
@@ -24,11 +26,16 @@
 
             <form method="post" action="/investigate/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>&pathId=<%=pathid%>" autocomplete="off">
                 <div class="form-group">
-                    <label for="exampleFormControlInput1">Evidence Name</label>
+                    <label for="exampleFormControlInput1" style="margin-top: 35x; font-weight:bold;">Evidence Name</label>
                     <input name="evidenceName" type="name" class="form-control" id="exampleFormControlInput1" placeholder="<%= evidenceName %>" disabled>
                 </div>
                 <div class="form-group">
-                    <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Tool Name</label>
+                    <label for="exampleFormControlTextarea1" style="margin-top: 35px; font-weight:bold;">Tool Name</label>
+                    <br>
+                    <FORM>
+                        Search <input type="text" id="searchInput" onkeyup="searchSel()">
+                    <br>
+                    <br>
                     <select id="toolName" name="toolName" class="form-select" aria-label="Default select example">
                         <optgroup label="Network" class="network">
                             <% for(var i=0; i < networkToolList.length; i++) { %>
@@ -53,7 +60,7 @@
                         </script>
                     <% } %>
                 <div class="form-group">
-                    <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Analysis Level</label>
+                    <label for="exampleFormControlTextarea1" style="margin-top: 35px; font-weight:bold;">Analysis Level</label>
                     <select id="analysisName" name="analysisName" class="form-select" aria-label="Default select example">
                         <% for(var i=0; i < analysisList.length; i++) { %>
                             <option value= <%= analysisList[i].id %>> <%= analysisList[i].name %></option> 
@@ -76,23 +83,12 @@
     </footer>
     <script>
         $(document).ready(function(){
-
-            /* Commented out since volatility supports analysis level
-            $("#toolName").change(function () {
-                if($(this).val() == "0") {
-                    $("#analysisName").attr("disabled", false);
-                } else {
-                    $("#analysisName").attr("disabled", true);
-                }
-            })
-            */
-
         var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
         removeItemButton: true,
         maxItemCount:5,
         searchResultLimit:5,
         renderChoiceLimit:5
-        });
+        });        
         });
     </script>
     <script>
@@ -109,6 +105,20 @@
             if(!confirm('Are you sure?')) {
                 e.preventDefault();
             }
+        }
+    </script>
+    <script>
+    function searchSel() {
+        var input=document.getElementById('searchInput').value.toLowerCase();
+        var output=document.getElementById('toolName').options;
+        for(var i=0;i<output.length;i++) {
+            if(output[i].value.indexOf(input)==0){
+            output[i].selected=true;
+            }
+            if(document.getElementById('searchInput').value==''){
+            output[0].selected=true;
+            }
+        }
         }
     </script>
 

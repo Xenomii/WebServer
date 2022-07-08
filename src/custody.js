@@ -649,10 +649,24 @@ router.get('/closeCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req
 });
 
 // List of forensic tools that will be displayed on the web app
-const toolList = [
-  { id: 0, "name": "Wireshark" },
-  { id: 1, "name": "Volatility" },
-  { id: 2, "name": "Binwalk" }
+// const toolList = [
+//   { id: 0, "name": "Wireshark" },
+//   { id: 1, "name": "Volatility" },
+//   { id: 2, "name": "Binwalk" }
+// ]
+
+const networkToolList = [
+  { id: "wireshark", "name": "Wireshark" }
+]
+
+const memoryToolList = [
+  { id: "volatility", "name": "Volatility" },
+  { id: "memoryTool02", "name": "Memory Tool 2" }
+]
+
+const executableToolList = [
+  { id: "binwalk", "name": "Binwalk" },
+  { id: "executableTool02", "name": "Exectuable Tool 2" }
 ]
 
 // List of analysis levels that determines the complexity of the command used and output displayed by the forensic tool
@@ -696,7 +710,10 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
           caseid: req.query.caseId,
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
-          toolList: toolList,
+          // toolList: toolList,
+          networkToolList: networkToolList,
+          memoryToolList: memoryToolList,
+          executableToolList: executableToolList,
           analysisList: analysisList,
           investigateDetails: ''
         });
@@ -729,7 +746,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
 
   // Check for which tool to run
   // === Wireshark ===
-  if (req.body.toolName == 0) {
+  if (req.body.toolName == "wireshark") {
     // Check file extension
     if (path.extname(filePath) !== '.cap' && path.extname(filePath) !== '.pcap') {
       investigateDetails = extMessage;
@@ -773,7 +790,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       res.redirect('/dashboard');
     }
     // === Volatility3 ===
-  } else if (req.body.toolName == 1) {
+  } else if (req.body.toolName == "volatility") {
     if (path.extname(filePath) !== '.vmem') {
       investigateDetails = extMessage;
       return render(req, res, investigateDetails);
@@ -836,7 +853,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       res.redirect('/dashboard');
     }
     // === Binwalk ===
-  } else if (req.body.toolName == 2) {
+  } else if (req.body.toolName == "binwalk") {
     if (req.body.analysisName == 0) {
       console.log(`[Simple] Running Binwalk on ${filePath} now...\n`);
       media_container.exec(
@@ -901,7 +918,10 @@ function render(req, res, investigateDetails) {
           caseid: req.query.caseId,
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
-          toolList: toolList,
+          // toolList: toolList,
+          networkToolList: networkToolList,
+          memoryToolList: memoryToolList,
+          executableToolList: executableToolList,
           analysisList: analysisList,
           toolName: req.body.toolName,
           investigateDetails: investigateDetails

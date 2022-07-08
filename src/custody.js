@@ -648,12 +648,6 @@ router.get('/closeCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req
   });
 });
 
-// List of forensic tools that will be displayed on the web app
-// const toolList = [
-//   { id: 0, "name": "Wireshark" },
-//   { id: 1, "name": "Volatility" },
-//   { id: 2, "name": "Binwalk" }
-// ]
 
 const networkToolList = [
   { id: "wireshark", "name": "Wireshark" }
@@ -710,7 +704,6 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
           caseid: req.query.caseId,
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
-          // toolList: toolList,
           networkToolList: networkToolList,
           memoryToolList: memoryToolList,
           executableToolList: executableToolList,
@@ -918,7 +911,6 @@ function render(req, res, investigateDetails) {
           caseid: req.query.caseId,
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
-          // toolList: toolList,
           networkToolList: networkToolList,
           memoryToolList: memoryToolList,
           executableToolList: executableToolList,

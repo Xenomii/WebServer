@@ -7,10 +7,8 @@ const db = require('./services/database.js');
 const dbfs = require('./services/databaseFileStore.js');
 const burrow = require('./services/burrow.js');
 const fileStore = require('./services/fileStore.js');
-const { promiseImpl } = require('ejs');
-const { exec } = require('child_process');
-const { stdout } = require('process');
-const { stderr } = require('process');
+const Docker = require('./services/docker.js');
+const path = require('path');
 
 const router = express.Router();
 
@@ -650,14 +648,29 @@ router.get('/closeCase', ac.isLoggedIn, ac.grantAccess('manager'), function (req
   });
 });
 
+// List of forensic tools that will be displayed on the web app
+const toolList = [
+  { id: 0, "name": "Wireshark" },
+  { id: 1, "name": "Volatility" },
+  { id: 2, "name": "Binwalk" }
+]
+
+// List of analysis levels that determines the complexity of the command used and output displayed by the forensic tool
+const analysisList = [
+  { id: 0, "name": "Simple" },
+  { id: 1, "name": "Advanced" }
+]
 
 // Investigate Page
 router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAccess('manager', 'investigator'), function (req, res) {
   try {
+    // Each of these variables must be present in the HTTP GET request URL (i.e., look at your URL address bar)
     if (isNaN(Number(req.query.pathId)) || isNaN(Number(req.query.caseId)) || isNaN(Number(req.query.evidenceId))) throw new Error("Invalid Case/Evidence Query Number");
+    // Corresponds to the case that you click on the dashboard page
     var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
+    // Each case can have many evidences
     var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
-    // This specifies where the file is stored
+    // This specifies where the file (i.e. evidence) is stored
     var filePath = req.session.currentEvidencePaths[req.query.pathId];
     if (!caseUuid || !evidenceUuid || !filePath) throw new Error("Invalid Case/Evidence UUID or File Path");
   } catch (err) {
@@ -665,10 +678,7 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
     res.redirect('/dashboard');
     return;
   }
-  
-  var toolList = ["wireshark","volatility","test"];
 
-  // Not sure if all of this information is needed to just display the page.
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');
     burrow.contract.GetCaseOfficers(caseUuid).then(value => {
@@ -687,6 +697,7 @@ router.get('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcces
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
           toolList: toolList,
+          analysisList: analysisList,
           investigateDetails: ''
         });
       }).catch(err => res.send(handlerError(err)))
@@ -708,54 +719,170 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     res.redirect('/dashboard');
     return;
   }
-  
-  var toolList = ["wireshark","volatility","test"];
-  
-  var toolName = '';
-  var analysisLevel = '';
+
+  // Imported from docker.js
+  var network_container = Docker.container_list[0];
+  var memory_container = Docker.container_list[1];
+  var media_container = Docker.container_list[2];
   var investigateDetails = '';
+  var extMessage = 'This tool does not support this file type!';
 
-  //Check for tool to run
-  if (req.body.toolName == "wireshark") {
-
-    // Runs the Wireshark tool
-    console.log(`Running wireshark on ${filePath} now...\n`);
-
-    // Analysis level selection logic
-    if (req.body.analysisLevel == "simple") {
-      exec(`capinfos -A ${filePath}`, (error, stdout, stderr) => {
-        if (error) {
-          console.log(`error: ${error.message}`);
-          res.redirect('/dashboard');
-        }
-        if (stderr) {
-          console.log(`stderr: ${stderr}`);
-          res.redirect('/dashboard');
-        }
-        toolName = 'wireshark';
-        analysisLevel = 'simple';
-        investigateDetails = stdout;
-      });
-    } else if (req.body.analysisLevel == "advanced") {
-      toolName = 'wireshark';
-      analysisLevel = 'advanced';
-      investigateDetails = 'Advanced output to be displayed here...';
+  // Check for which tool to run
+  // === Wireshark ===
+  if (req.body.toolName == 0) {
+    // Check file extension
+    if (path.extname(filePath) !== '.cap' && path.extname(filePath) !== '.pcap') {
+      investigateDetails = extMessage;
+      // Return is needed here to fully finish the response (i.e. force the app to end here and not continue further)
+      return render(req, res, investigateDetails);
+    }
+    // Determine which analysis level was selected (0 = Simple, 1 = Advanced)
+    if (req.body.analysisName == 0) {
+      console.log(`[Simple] Running wireshark on ${filePath} now...\n`);
+      network_container.exec(
+        ['tshark', '-r', `${filePath}`, '-T', 'fields', '-E', 'header=y', '-e', 'ip.src', '-e', 'ip.dst', '-e', 'ip.proto', '-e', 'udp.dstport', '-e', 'ip.len'],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        // This is possible through the use of the simple-dockerode module
+        .then(results => {
+          // If the file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
+        });
+    } else if (req.body.analysisName == 1) {
+      console.log(`[Advanced] Running wireshark on ${filePath} now...\n`);
+      network_container.exec(
+        ['tshark', '-r', `${filePath}`, '-V'],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        .then(results => {
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
+        });
     } else {
       res.redirect('/dashboard');
     }
-    
-  } else if (req.body.toolName == 'volatility') { 
-    //Placeholder code, replace with tool execution afterwards
-    console.log('Volatility test\n');
-    toolName = 'volatility';
-    investigateDetails = 'Placeholder text for results after executing tool';
-  } else if (req.body.toolName == 'test') {
-    //Placeholder code, replace with tool execution afterwards
-    console.log('TEST\n');
-    toolName = 'test';
-    investigateDetails = 'Placeholder text for results after executing tool';
+    // === Volatility3 ===
+  } else if (req.body.toolName == 1) {
+    if (path.extname(filePath) !== '.vmem') {
+      investigateDetails = extMessage;
+      return render(req, res, investigateDetails);
+    }
+    if (req.body.analysisName == 0) {
+      console.log(`[Simple] Running volatility on ${filePath} now...\n`);
+      memory_container.exec(
+        ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'banners'],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        .then(results => {
+          // If the file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = "----------------------------------------BANNER DETECTION----------------------------------------\n"
+            investigateDetails = investigateDetails + results.stdout;
+          }
+        }).then(results => {
+          // Execute info.Info plugin after identifying banners
+          memory_container.exec(
+            ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'info.Info'],
+            { stdout: true, stderr: true })
+            .catch(console.error)
+            .then(results => {
+              investigateDetails = investigateDetails + "----------------------------------------info.Info RESULTS----------------------------------------\n";
+              // Exit code 2 means file does not exist, output the error (highly unlikely that this will occur)
+              if (results.inspect.ExitCode === 2) {
+                investigateDetails = investigateDetails + results.stderr;
+                // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
+              } else if (results.inspect.ExitCode === 1) {
+                investigateDetails = investigateDetails + "ERROR - Operating system of memory file is not supported, unable to perform analysis"
+              } else {
+                investigateDetails = investigateDetails + results.stdout;
+              }
+            }).then(results => {
+              render(req, res, investigateDetails);
+            });
+        });
+    } else if (req.body.analysisName == 1) {
+      console.log(`[Advanced] Running volatility on ${filePath} now...\n`);
+      memory_container.exec(
+        ['python3', '/home/volatility3/vol.py', '-f', `${filePath}`, 'windows.pslist.PsList'],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        .then(results => {
+          // Exit code 2 means file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode === 2) {
+            investigateDetails = investigateDetails + results.stderr;
+            // Error code 1 occurs when banner of memory file does not match existing symbol tables, the plugin is unable to analyse the memory file
+          } else if (results.inspect.ExitCode === 1) {
+            investigateDetails = "ERROR - Operating system of memory file is not supported, unable to perform analysis"
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
+        });
+    } else {
+      res.redirect('/dashboard');
+    }
+    // === Binwalk ===
+  } else if (req.body.toolName == 2) {
+    if (req.body.analysisName == 0) {
+      console.log(`[Simple] Running Binwalk on ${filePath} now...\n`);
+      media_container.exec(
+        ['binwalk', '-r', `${filePath}`],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        // This is possible through the use of the simple-dockerode module
+        .then(results => {
+          // If the file does not exist, output the error (highly unlikely that this will occur)
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
+        });
+    } else if (req.body.analysisName == 1) {
+      console.log(`[Advanced] Running Binwalk on ${filePath} now...\n`);
+      media_container.exec(
+        ['binwalk', '-b', `${filePath}`],
+        { stdout: true, stderr: true })
+        .catch(console.error)
+        .then(results => {
+          if (results.inspect.ExitCode !== 0) {
+            investigateDetails = results.stderr;
+          } else {
+            investigateDetails = results.stdout;
+          }
+        }).then(results => {
+          render(req, res, investigateDetails);
+        });
+    } else {
+      res.redirect('/dashboard');
+    }
   };
-  
+
+
+});
+
+//Function to render page after running tools on evidence
+function render(req, res, investigateDetails) {
+  var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
+  var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
+  var filePath = req.session.currentEvidencePaths[req.query.pathId];
+
   // This information might be useful to record the investigative action onto the blockchain
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {
     var latestEvidence = ret.retEvidence.split('|');
@@ -775,14 +902,13 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           evidenceid: req.query.evidenceId,
           pathid: req.query.pathId,
           toolList: toolList,
-          toolName: toolName,
-          analysisLevel: analysisLevel,
+          analysisList: analysisList,
+          toolName: req.body.toolName,
           investigateDetails: investigateDetails
         });
       }).catch(err => res.send(handlerError(err)))
     });
   });
- 
-});
+};
 
 module.exports = router;

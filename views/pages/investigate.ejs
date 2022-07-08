@@ -4,9 +4,9 @@
 <head>
     <title>Investigate</title>
     <%- include('../partials/head'); %>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
-        <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+             
 </head>
 
 <body>
@@ -14,98 +14,75 @@
         <!-- Sidebar  -->
         <%- include('../partials/sidebar'); %>
 
-            <!-- Page Content  -->
-            <div id="content">
-                <!-- Top Bar  -->
-                <%- include('../partials/topNav'); %>
+        <!-- Page Content  -->
+        <div id="content">
+            <!-- Top Bar  -->
+            <%- include('../partials/topNav'); %>
 
-                    <!-- Content Here! -->
-                    <h3> Investigate Evidence Here </h3>
+            <!-- Content Here! -->
+            <h3> Investigate Evidence </h3>
 
-                    <form method="post"
-                        action="/investigate/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>&pathId=<%=pathid%>"
-                        autocomplete="off">
-                        <div class="form-group">
-                            <label for="exampleFormControlInput1">Evidence Name</label>
-                            <input name="evidenceName" type="name" class="form-control" id="exampleFormControlInput1"
-                                placeholder="<%= evidenceName %>" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="exampleFormControlTextarea1" style="margin-top: 20px;">List of Forensic
-                                Tools</label>
-                            <select id="toolName" name="toolName" class="form-select"
-                                aria-label="Default select example">
-                                <!--<option value="wireshark">Wireshark</option>
-                                <option value="test">Test</option>-->
-                            </select>
-                            <% if (typeof toolName !=='undefined' ) { %>
-                                <script>
-                                    let toolName = '<%-toolName%>';
-                                    document.getElementById('toolName').value = toolName;
-                                </script>
+            <form method="post" action="/investigate/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>&pathId=<%=pathid%>" autocomplete="off">
+                <div class="form-group">
+                    <label for="exampleFormControlInput1">Evidence Name</label>
+                    <input name="evidenceName" type="name" class="form-control" id="exampleFormControlInput1" placeholder="<%= evidenceName %>" disabled>
+                </div>
+                <div class="form-group">
+                    <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Tool Name</label>
+                    <select id="toolName" name="toolName" class="form-select" aria-label="Default select example">
+                        <% for(var i=0; i < toolList.length; i++) { %>
+                            <option value= <%= toolList[i].id %>> <%= toolList[i].name %></option> 
                             <% } %>
-                        <div class="form-group" id="analysis">
-                            <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Analysis Level</label>
-                            <select id="analysisLevel" name="analysisLevel" class="form-select"
-                                aria-label="Default select example">
-                                <option value="simple">Simple</option>
-                                <option value="advanced">Advanced</option>
-                            </select>
-                            <% if (typeof analysisLevel !=='undefined' ) { %>
-                                <script>
-                                    let analysisLevel = '<%-analysisLevel%>';
-                                    document.getElementById('analysisLevel').value = analysisLevel;
-                                </script>
+                    </select>
+                    <% if (typeof toolName !=='undefined' ) { %>
+                        <script>
+                            let toolName = '<%-toolName%>';
+                            document.getElementById('toolName').value = toolName;
+                        </script>
+                    <% } %>
+                <div class="form-group">
+                    <label for="exampleFormControlTextarea1" style="margin-top: 20px;">Analysis Level</label>
+                    <select id="analysisName" name="analysisName" class="form-select" aria-label="Default select example">
+                        <% for(var i=0; i < analysisList.length; i++) { %>
+                            <option value= <%= analysisList[i].id %>> <%= analysisList[i].name %></option> 
                             <% } %>
-                    </form>
+                    </select>
 
-                    <br>
-                    <button type="submit" onclick="clicked(event)" class="btn btn-dark">Run Tool</button>
-                    </form>
-
-                    <textarea style="margin-top: 1%;" class="form-control" id="exampleFormControlTextarea1" rows="20"
-                        readonly><%=investigateDetails%></textarea>
-                    <!-- Content Ends Here! -->
-            </div>
+                </form>
+                           
+                <br>
+                <button type="submit" onclick="clicked(event)" class="btn btn-dark">Submit</button>
+              </form>
+            
+            <textarea style="margin-top: 1%;" class="form-control" id="exampleFormControlTextarea1" rows="20" readonly><%=investigateDetails%></textarea>
+            <!-- Content Ends Here! -->
+        </div>
     </div>
 
     <footer>
         <%- include('../partials/footer'); %>
     </footer>
-    
-    <!--Programmatically populate options of select element for list of tools-->
     <script>
-        let tools = '<%-toolList%>'.split(",");
-        var select = document.getElementById("toolName");
-        
-        for (var i = 0; i < tools.length; i++) {
-            var optionElement = document.createElement("option");
-            optionElement.textContent = tools[i].charAt(0).toUpperCase() + tools[i].slice(1);
-            optionElement.value = tools[i];
-            select.appendChild(optionElement);
-        }
-    </script>
-    
-    <script>
-        $(document).ready(function () {
+        $(document).ready(function(){
 
+            /* Commented out since volatility supports analysis level
             $("#toolName").change(function () {
-                if($(this).val() == "wireshark") {
-                    $("#analysisLevel").show();
+                if($(this).val() == "0") {
+                    $("#analysisName").attr("disabled", false);
                 } else {
-                    $("#analysisLevel").hide();
+                    $("#analysisName").attr("disabled", true);
                 }
             })
+            */
 
-            var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
-                removeItemButton: true,
-                maxItemCount: 5,
-                searchResultLimit: 5,
-                renderChoiceLimit: 5
-            });
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        maxItemCount:5,
+        searchResultLimit:5,
+        renderChoiceLimit:5
+        });
         });
     </script>
-    
     <script>
         var dateEl = document.getElementById('date');
         var timeEl = document.getElementById('time');
@@ -115,12 +92,15 @@
     </script>
 
     <script>
-        function clicked(e) {
-            if (!confirm('Are you sure?')) {
+        function clicked(e)
+        {
+            if(!confirm('Are you sure?')) {
                 e.preventDefault();
             }
         }
     </script>
+
+    
 </body>
 
 </html>

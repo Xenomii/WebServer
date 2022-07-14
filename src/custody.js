@@ -9,6 +9,7 @@ const burrow = require('./services/burrow.js');
 const fileStore = require('./services/fileStore.js');
 const Docker = require('./services/docker.js');
 const path = require('path');
+const crypto = require('crypto');
 
 const router = express.Router();
 
@@ -736,12 +737,14 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   var media_container = Docker.container_list[2];
   var investigateDetails = '';
   var extMessage = 'This tool does not support this file type!';
+  var check = 0;
 
   // Check for which tool to run
   // === Wireshark ===
   if (req.body.toolName == "wireshark") {
     // Check file extension
     if (path.extname(filePath) !== '.cap' && path.extname(filePath) !== '.pcap') {
+      check = 1;
       investigateDetails = extMessage;
       // Return is needed here to fully finish the response (i.e. force the app to end here and not continue further)
       return render(req, res, investigateDetails);
@@ -780,11 +783,13 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           render(req, res, investigateDetails);
         });
     } else {
+      check = 1;
       res.redirect('/dashboard');
     }
     // === Volatility3 ===
   } else if (req.body.toolName == "volatility") {
     if (path.extname(filePath) !== '.vmem') {
+      check = 1;
       investigateDetails = extMessage;
       return render(req, res, investigateDetails);
     }
@@ -843,6 +848,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           render(req, res, investigateDetails);
         });
     } else {
+      check = 1;
       res.redirect('/dashboard');
     }
     // === Binwalk ===
@@ -880,11 +886,45 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           render(req, res, investigateDetails);
         });
     } else {
+      check = 1;
       res.redirect('/dashboard');
     }
   };
 
+  if (check == 0) {
+    // These details are needed by LogEvidence
+    burrow.contract.GetAllSimilarEvidence(caseUuid, evidenceUuid).then(ret => {
+      var evidenceList = burrow.formatToArray(ret.retEvidence);
+      let i = evidenceList.length - 1;
+      while (true) {
+        if (!evidenceList[i][0]) evidenceList.pop();
+        else break;
+        i--;
+      }
 
+      // Populating the details to log the action
+      let uid = evidenceList[0][0];
+      let datetime = new Date(Date.now()).toISOString().slice(0, 19).replace('T', ' ');
+
+      // Hashing the evidence
+      let fileBuffer = fs.readFileSync(filePath);
+      let hashsum = crypto.createHash('sha256');
+      hashsum.update(fileBuffer);
+      let hash = hashsum.digest('hex');
+
+      let evidenceName = evidenceList[0][1];
+      let locTime = evidenceList[0][8];
+      let evidenceDetails = evidenceList[0][6];
+      let owner = evidenceList[0][7];
+      let ip = evidenceList[0][5];
+      let eventLog = 'Conducted investigation using ' + req.body.toolName;
+      let actionBy = req.session.uuid;
+
+      let evidence = [caseUuid, uid, evidenceName, datetime, eventLog, ip, hash, evidenceDetails, owner, locTime, actionBy];
+      console.log(evidence);
+      burrow.contract.LogEvidence(evidence);
+    });
+  }
 });
 
 //Function to render page after running tools on evidence

@@ -5,7 +5,7 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "@hyperledger/burrow": "^0.34.0",
+    "@hyperledger/burrow": "^0.34.4",
     "@monax/burrow": "0.0.3",
     "accesscontrol": "^2.2.1",
     "bcryptjs": "^2.4.3",

@@ -737,7 +737,6 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   var media_container = Docker.container_list[2];
   var investigateDetails = '';
   var extMessage = 'This tool does not support this file type!';
-  var check = 0;
 
   // Check for which tool to run
   // === Wireshark ===

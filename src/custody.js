@@ -744,7 +744,6 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
   if (req.body.toolName == "wireshark") {
     // Check file extension
     if (path.extname(filePath) !== '.cap' && path.extname(filePath) !== '.pcap') {
-      check = 1;
       investigateDetails = extMessage;
       // Return is needed here to fully finish the response (i.e. force the app to end here and not continue further)
       return render(req, res, investigateDetails);
@@ -759,11 +758,7 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         // This is possible through the use of the simple-dockerode module
         .then(results => {
           // If the file does not exist, output the error (highly unlikely that this will occur)
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          results.inspect.ExitCode !== 0 ? investigateDetails = results.stderr : investigateDetails = results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
@@ -774,22 +769,16 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         { stdout: true, stderr: true })
         .catch(console.error)
         .then(results => {
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          results.inspect.ExitCode !== 0 ? investigateDetails = results.stderr : investigateDetails = results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
     } else {
-      check = 1;
       res.redirect('/dashboard');
     }
     // === Volatility3 ===
   } else if (req.body.toolName == "volatility") {
     if (path.extname(filePath) !== '.vmem') {
-      check = 1;
       investigateDetails = extMessage;
       return render(req, res, investigateDetails);
     }
@@ -848,7 +837,6 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
           render(req, res, investigateDetails);
         });
     } else {
-      check = 1;
       res.redirect('/dashboard');
     }
     // === Binwalk ===
@@ -859,14 +847,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         ['binwalk', '-r', `${filePath}`],
         { stdout: true, stderr: true })
         .catch(console.error)
-        // This is possible through the use of the simple-dockerode module
         .then(results => {
-          // If the file does not exist, output the error (highly unlikely that this will occur)
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          results.inspect.ExitCode !== 0 ? investigateDetails = results.stderr : investigateDetails = results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
@@ -877,61 +859,59 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         { stdout: true, stderr: true })
         .catch(console.error)
         .then(results => {
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          results.inspect.ExitCode !== 0 ? investigateDetails = results.stderr : investigateDetails = results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
     } else {
-      check = 1;
       res.redirect('/dashboard');
     }
   };
-
-  if (check == 0) {
-    // These details are needed by LogEvidence
-    burrow.contract.GetAllSimilarEvidence(caseUuid, evidenceUuid).then(ret => {
-      var evidenceList = burrow.formatToArray(ret.retEvidence);
-      let i = evidenceList.length - 1;
-      while (true) {
-        if (!evidenceList[i][0]) evidenceList.pop();
-        else break;
-        i--;
-      }
-
-      // Populating the details to log the action
-      let uid = evidenceList[0][0];
-      let datetime = new Date(Date.now()).toISOString().slice(0, 19).replace('T', ' ');
-
-      // Hashing the evidence
-      let fileBuffer = fs.readFileSync(filePath);
-      let hashsum = crypto.createHash('sha256');
-      hashsum.update(fileBuffer);
-      let hash = hashsum.digest('hex');
-
-      let evidenceName = evidenceList[0][1];
-      let locTime = evidenceList[0][8];
-      let evidenceDetails = evidenceList[0][6];
-      let owner = evidenceList[0][7];
-      let ip = evidenceList[0][5];
-      let eventLog = 'Conducted investigation using ' + req.body.toolName;
-      let actionBy = req.session.uuid;
-
-      let evidence = [caseUuid, uid, evidenceName, datetime, eventLog, ip, hash, evidenceDetails, owner, locTime, actionBy];
-      console.log(evidence);
-      burrow.contract.LogEvidence(evidence);
-    });
-  }
 });
+
+// Function that records down the investigate action using the LogEvidence method provided in the smart contract
+function recordInvestigation(caseUuid, evidenceUuid, filePath, toolName, uuid) {
+  // This method allows us to acquire the actual evidence with all the relevant details needed.
+  burrow.contract.GetAllSimilarEvidence(caseUuid, evidenceUuid).then(ret => {
+    var evidenceList = burrow.formatToArray(ret.retEvidence);
+    let i = evidenceList.length - 1;
+    while (true) {
+      if (!evidenceList[i][0]) evidenceList.pop();
+      else break;
+      i--;
+    }
+
+    // Populating the fields that needs to be recorded down on the CoC.
+    let uid = evidenceList[0][0];
+    let datetime = new Date(Date.now()).toISOString().slice(0,19).replace('T', ' ');
+
+    let fileBuffer = fs.readFileSync(filePath);
+    let hashsum = crypto.createHash('sha256');
+    hashsum.update(fileBuffer);
+    let hash = hashsum.digest('hex');
+
+    let evidenceName = evidenceList[0][1];
+    let locTime = evidenceList[0][8];
+    let evidenceDetails = evidenceList[0][6];
+    let owner = evidenceList[0][7];
+    let ip = evidenceList[0][5];
+    let eventLog = 'Conducted investigation using ' + toolName;
+    let actionBy = uuid;
+    
+    let evidence = [caseUuid, uid, evidenceName, datetime, eventLog, ip, hash, evidenceDetails, owner, locTime, actionBy];
+    // This method interacts with the smart contract which logs the investigate action which will be displayed on the CoC chain.
+    burrow.contract.LogEvidence(evidence);
+  })
+}
 
 //Function to render page after running tools on evidence
 function render(req, res, investigateDetails) {
   var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
   var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
   var filePath = req.session.currentEvidencePaths[req.query.pathId];
+
+  // Records the investigate action only when the page renders
+  if (investigateDetails != 'This tool does not support this file type!') recordInvestigation(caseUuid, evidenceUuid, filePath, req.body.toolName, req.session.uuid);
 
   // This information might be useful to record the investigative action onto the blockchain
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {

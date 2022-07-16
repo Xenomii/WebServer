@@ -9,6 +9,8 @@ const burrow = require('./services/burrow.js');
 const fileStore = require('./services/fileStore.js');
 const Docker = require('./services/docker.js');
 const path = require('path');
+const crypto = require('crypto');
+const { stderr } = require('process');
 
 const router = express.Router();
 
@@ -756,12 +758,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         .catch(console.error)
         // This is possible through the use of the simple-dockerode module
         .then(results => {
-          // If the file does not exist, output the error (highly unlikely that this will occur)
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+          else investigateDetails = investigateDetails + results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
@@ -772,11 +770,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         { stdout: true, stderr: true })
         .catch(console.error)
         .then(results => {
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+          else investigateDetails = investigateDetails + results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
@@ -856,12 +851,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         .catch(console.error)
         // This is possible through the use of the simple-dockerode module
         .then(results => {
-          // If the file does not exist, output the error (highly unlikely that this will occur)
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+          else investigateDetails = investigateDetails + results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
@@ -872,11 +863,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         { stdout: true, stderr: true })
         .catch(console.error)
         .then(results => {
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+          else investigateDetails = investigateDetails + results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
@@ -896,12 +884,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         { stdout: true, stderr: true })
         .catch(console.error)
         .then(results => {
-          // If the file does not exist, output the error (highly unlikely that this will occur)
-          if (results.inspect.ExitCode !== 0) {
-            investigateDetails = results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+          else investigateDetails = investigateDetails + results.stdout;
         }).then(results => {
           render(req, res, investigateDetails);
         });
@@ -912,11 +896,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
         { stdout: true, stderr: true })
         .catch(console.error)
         .then(results => {
-          if (results.inspect.ExitCode !==0) {
-            investigateDetails = investigateDetails + results.stderr;
-          } else {
-            investigateDetails = results.stdout;
-          }
+          if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+          else investigateDetails = investigateDetails + results.stdout;
         }).then(results => {
           console.log(`Print hidden message from extracted txt file`);
           media_container.exec(
@@ -925,11 +906,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
             .catch(console.error)
             .then(results => {
               investigateDetails = investigateDetails + "Extracted hidden message: \n";
-              if (results.inspect.ExitCode !== 0) {
-                investigateDetails = investigateDetails + results.stderr;
-              } else {
-                investigateDetails = investigateDetails + results.stdout;
-              }
+              if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+              else investigateDetails = investigateDetails + results.stdout;
             }).then(results => {
               console.log(`Remove decrypt.txt after printing hidden message`);
               media_container.exec(
@@ -937,11 +915,8 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
                 { stdout: true, stderr: true })
                 .catch(console.error)
                 .then(results => {
-                  if (results.inspect.ExitCode !== 0) {
-                    investigateDetails = investigateDetails + results.stderr;
-                  } else {
-                    investigateDetails = investigateDetails + results.stdout;
-                  }
+                  if (results.inspect.ExitCode !== 0) investigateDetails = investigateDetails + stderr;
+                  else investigateDetails = investigateDetails + results.stdout;
                 }).then(results => {
                   render(req, res, investigateDetails);
                 });
@@ -951,16 +926,52 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
       res.redirect('/dashboard');
     }
   };
-
-
-
 });
+
+// Function that records down the investigate action
+function recordInvestigation(caseUuid, evidenceUuid, filePath, toolName, uuid) {
+  // This method allows us to acquire the evidence with the relevant details
+  burrow.contract.GetAllSimilarEvidence(caseUuid, evidenceUuid).then(ret => {
+    var evidenceList = burrow.formatToArray(ret.retEvidence);
+    let i = evidenceList.length - 1;
+    while (true) {
+      if (!evidenceList[i][0]) evidenceList.pop();
+      else break;
+      i--;
+    }
+
+    // Populating the fields that needs to be recorded for the CoC
+    let uid = evidenceList[0][0];
+    let datetime = new Date(Date.now()).toISOString().slice(0, 19).replace('T', ' ');
+    // Get the hash of the file
+    let fileBuffer = fs.readFileSync(filePath);
+    let hashSum = crypto.createHash('sha256');
+    hashSum.update(fileBuffer);
+    // This is the variable being used to populate the hash file detail
+    let hash = hashSum.digest('hex');
+    let evidenceName = evidenceList[0][1];
+    let locTime = evidenceList[0][8];
+    let evidenceDetails = evidenceList[0][6];
+    let owner = evidenceList[0][7];
+    let ip = evidenceList[0][5];
+    let eventLog = 'Conducted investigation using ' + toolName;
+    let actionBy = uuid;
+
+    let evidence = [caseUuid, uid, evidenceName, datetime, eventLog, ip, hash, evidenceDetails, owner, locTime, actionBy];
+
+    // Using the smart contract LogEvidence method to record down the investigate action
+    burrow.contract.LogEvidence(evidence);
+  })
+}
 
 //Function to render page after running tools on evidence
 function render(req, res, investigateDetails) {
   var caseUuid = Object.keys(req.session.relevantCase)[req.query.caseId];
   var evidenceUuid = Object.keys(req.session.currentEvidenceList)[req.query.evidenceId];
   var filePath = req.session.currentEvidencePaths[req.query.pathId];
+
+  // Only record down the investigate action when the tool successfully executes
+  if (investigateDetails !== 'This tool does not support this file type!') recordInvestigation(caseUuid, evidenceUuid, filePath, req.body.toolName, req.session.uuid);
 
   // This information might be useful to record the investigative action onto the blockchain
   burrow.contract.GetLatestCaseEvidence(caseUuid, evidenceUuid).then(ret => {

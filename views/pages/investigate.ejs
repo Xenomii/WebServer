@@ -5,7 +5,8 @@
     <title>Investigate</title>
     <%- include('../partials/head'); %>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
-    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>             
+    <link rel="stylesheet" type="text/css" href="/css/loading.css"  />
+    <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>         
 </head>
 
 <body>
@@ -19,6 +20,14 @@
             <%- include('../partials/topNav'); %>
 
             <!-- Content Here! -->
+            
+            <div id="loadingModal" class="modal">
+                <div class="modal-content">
+                    <p>Analysis in progress... Please do not refresh</p>
+                    <div class="loader"></div>
+                </div>
+            </div>
+            
             <h3> Investigate Evidence </h3>
 
             <form method="post" action="/investigate/?caseId=<%=caseid%>&evidenceId=<%=evidenceid%>&pathId=<%=pathid%>" autocomplete="off">
@@ -101,6 +110,9 @@
         {
             if(!confirm('Are you sure?')) {
                 e.preventDefault();
+            } else {
+                var modal = document.getElementById("loadingModal");
+                modal.style.display = "block";
             }
         }
     </script>

@@ -5,6 +5,7 @@
     <title>Add Evidence</title>
     <%- include('../partials/head'); %>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/loading.css"  />
     <script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
              
 </head>
@@ -20,9 +21,17 @@
             <%- include('../partials/topNav'); %>
 
             <!-- Content Here! -->
+            
+            <div id="loadingModal" class="modal">
+                <div class="modal-content">
+                    <p>Upload in progress... Please do not refresh</p>
+                    <div class = "loader"></div>
+                </div>
+            </div>
+            
             <h3> New Evidence </h3>
 
-            <form method="post" action="/addEvidence/?caseId=<%=caseid%>" enctype="multipart/form-data" autocomplete="off"> 
+            <form id="uploadForm" method="post" action="/addEvidence/?caseId=<%=caseid%>" enctype="multipart/form-data" autocomplete="off"> 
                 <div class="form-group">
                     <label for="exampleFormControlInput1">Evidence Name</label>
                     <input name="evidenceName" type="name" class="form-control" id="exampleFormControlInput1" placeholder="Evidence Name" required>
@@ -97,6 +106,19 @@
         {
             if(!confirm('Are you sure?')) {
                 e.preventDefault();
+            } else {
+                var uploadForm = document.getElementById('uploadForm');
+                var load = true;
+                //Check if all required fields are filled in
+                for(var i=0; i < uploadForm.elements.length; i++){
+                    if(uploadForm.elements[i].value === '' && uploadForm.elements[i].hasAttribute('required')){
+                        load = false;
+                    }
+                }
+                if(load) {
+                     var modal = document.getElementById("loadingModal");
+                     modal.style.display = "block";
+                }
             }
         }
     </script>

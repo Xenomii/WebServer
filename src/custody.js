@@ -663,7 +663,8 @@ const memoryToolList = [
 
 const steganographyToolList = [
   { id: "binwalk", "name": "Binwalk" },
-  { id: "steghide", "name": "Steghide" }
+  { id: "steghide", "name": "Steghide" },
+  { id: "sleuthkit", "name": "Sleuthkit"}
 ]
 
 // List of analysis levels that determines the complexity of the command used and output displayed by the forensic tool
@@ -925,7 +926,51 @@ router.post('/investigate', ac.isLoggedIn, ac.isRelevantCaseLoaded, ac.grantAcce
     } else {
       res.redirect('/dashboard');
     }
-  };
+    //===Sleuthkit===
+  }else if (req.body.toolName == "sleuthkit") {
+    //list out all the possible accepted file types 
+    //if (path.extname(filePath) !== '.vmdk' & (path.extname(filePath)) !== '.dd') {
+    //   investigateDetails = extMessage;
+    //Return is needed here to fully finish the response (i.e. force the app to end here and not continue further)
+    //return render (req,res,investigateDetails);
+    //}
+    //determine which analysis level was selected (0=simple, 1=advanced)
+    if (req.body.analysisName == 0) {
+        console.log(`[Simple] Running Sleuthkit on ${filePath} now... \n`);
+        media_container.exec(
+            ['srch_strings', `${filePath}`],
+            {stdout: true, stderr:true })
+            .catch(console.error)
+            .then(results => {
+                if (results.inspect.ExitCode !==0) {
+                    investigateDetails = investigateDetails + results.stderr;
+                } else {
+                    investigateDetails = investigateDetails + results.stdout;
+                }
+            }).then(results => {
+                render(req,res,investigateDetails);
+            });
+    }else if (req.body.analysisName == 1) {
+    console.log(`[Advanced] Running Sleuthkit on ${filePath} now... \n`);
+    media_container.exec(
+        ['fiwalk', `${filePath}`],
+        {stdout: true, stderr: true}) 
+        .catch(console.error)
+        .then(results => {
+            if (results.inspect.ExitCode !== 0) {
+                investigateDetails = investigateDetails + results.stderr;
+            } else {
+                investigateDetails = investigateDetails + results.stdout;
+            }
+            }).then(results => {
+                render(req, res, investigateDetails);
+            });
+        
+        } else { 
+            res.redirect('/dashboard');
+        }
+
+    };
 });
 
 // Function that records down the investigate action

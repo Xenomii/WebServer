@@ -17,7 +17,7 @@ for (let i = 0; i < container_names.length; i++) {
 for (let x = 0; x < container_list.length; x++) {
     var container = container_list[x];
     container.inspect(function(err, data){
-        if (err) {
+        if (data.State.Status !== 'running' || err) {
             console.log(`ERROR! DOCKER CONTAINER ${container_names[x]} IS NOT CONNECTED!`);
         } else {
             console.log(`Docker Container ${container_names[x]} Connection OK`);
